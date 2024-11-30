@@ -4,13 +4,13 @@ import "fmt"
 import "os"
 
 func main() {
-	dat, err := os.ReadFile("day01/input01.txt")
+	dat, err := os.ReadFile("day16/input16.txt")
 	if err != nil {
 		panic(err)
 	}
 	input := string(dat[:])
-	fmt.Println("Day01 solution1:", solvePuzzle1(input))
-	fmt.Println("Day01 solution2:", solvePuzzle2(input))
+	fmt.Println("Day16 solution1:", solvePuzzle1(input))
+	fmt.Println("Day16 solution2:", solvePuzzle2(input))
 }
 
 func solvePuzzle1(input string) int64 {
