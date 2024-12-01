@@ -6,3 +6,4 @@
 ![days_completed](https://img.shields.io/badge/days_completed-1-red)
 
 Solutions of Advent Of Code 2024 in Go
+
