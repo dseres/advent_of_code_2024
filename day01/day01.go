@@ -14,7 +14,7 @@ var input string
 func main() {
 	nums1, nums2 := parseInput(input)
 	fmt.Println("Day01 solution1:", solvePuzzle1(nums1, nums2))
-	fmt.Println("Day01 solution2:", solvePuzzle2(nums1, nums2))
+	fmt.Println("Day01 solution2:", solvePuzzle2WithMap(nums1, nums2))
 }
 
 func solvePuzzle1(nums1 []int, nums2 []int) (diff int64) {
@@ -39,6 +39,27 @@ func solvePuzzle2(nums1 []int, nums2 []int) (similarity int64) {
 		similarity += int64(n) * count
 	}
 	return
+}
+
+func solvePuzzle2WithMap(nums1 []int, nums2 []int) (similarity int64) {
+	m := createCountMap(nums2)
+	for _, n := range nums1 {
+		similarity += int64(n) * int64(m[n])
+	}
+	return
+}
+
+func createCountMap(nums2 []int) map[int]int {
+	m := make(map[int]int)
+	for _, n := range nums2 {
+		_, ok := m[n]
+		if ok {
+			m[n] += 1
+		} else {
+			m[n] = 1
+		}
+	}
+	return m
 }
 
 func parseInput(input string) (array1 []int, array2 []int) {
