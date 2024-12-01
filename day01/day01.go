@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -19,11 +18,7 @@ func main() {
 
 func solvePuzzle1(nums1 []int, nums2 []int) (diff int64) {
 	for i := range nums1 {
-		if nums1[i] < nums2[i] {
-			diff += int64(nums2[i] - nums1[i])
-		} else {
-			diff += int64(nums1[i] - nums2[i])
-		}
+		diff += int64(abs(nums1[i] - nums2[i]))
 	}
 	return
 }
@@ -44,7 +39,7 @@ func solvePuzzle2(nums1 []int, nums2 []int) (similarity int64) {
 func solvePuzzle2WithMap(nums1 []int, nums2 []int) (similarity int64) {
 	m := createCountMap(nums2)
 	for _, n := range nums1 {
-		similarity += int64(n) * int64(m[n])
+		similarity += int64(n * m[n])
 	}
 	return
 }
@@ -52,12 +47,7 @@ func solvePuzzle2WithMap(nums1 []int, nums2 []int) (similarity int64) {
 func createCountMap(nums2 []int) map[int]int {
 	m := make(map[int]int)
 	for _, n := range nums2 {
-		_, ok := m[n]
-		if ok {
-			m[n] += 1
-		} else {
-			m[n] = 1
-		}
+		m[n] += 1
 	}
 	return m
 }
@@ -65,7 +55,8 @@ func createCountMap(nums2 []int) map[int]int {
 func parseInput(input string) (array1 []int, array2 []int) {
 	for _, line := range strings.Split(input, "\n") {
 		if len(line) > 0 {
-			i, j := parseLine(line)
+			var i, j int
+			fmt.Sscanf(line, "%d %d", &i, &j)
 			array1 = append(array1, i)
 			array2 = append(array2, j)
 		}
@@ -75,15 +66,9 @@ func parseInput(input string) (array1 []int, array2 []int) {
 	return
 }
 
-func parseLine(line string) (int, int) {
-	parts := strings.Fields(line)
-	i, err := strconv.Atoi(parts[0])
-	if err != nil {
-		panic(err)
+func abs(a int) int {
+	if a < 0 {
+		return -a
 	}
-	j, err := strconv.Atoi(parts[1])
-	if err != nil {
-		panic(err)
-	}
-	return i, j
+	return a
 }
