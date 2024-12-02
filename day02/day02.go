@@ -47,7 +47,6 @@ func parseInput(input string) (reports [][]int) {
 
 func parseLine(line string) (report []int) {
 	fields := strings.Fields(line)
-	fmt.Println(fields)
 	for _, field := range fields {
 		val, err := strconv.Atoi(field)
 		if err != nil {
@@ -86,7 +85,6 @@ func isIncreasingWithDampener(report []int) bool {
 		dampenedReport := []int{}
 		dampenedReport = append(dampenedReport, report[:i]...)
 		dampenedReport = append(dampenedReport, report[i+1:]...)
-		fmt.Println(dampenedReport)
 		if isIncreasing(dampenedReport) {
 			return true
 		}
@@ -100,7 +98,6 @@ func isDecreasingWithDampener(report []int) bool {
 		dampenedReport := []int{}
 		dampenedReport = append(dampenedReport, report[:i]...)
 		dampenedReport = append(dampenedReport, report[i+1:]...)
-		fmt.Println(dampenedReport)
 		if isDecreasing(dampenedReport) {
 			return true
 		}
