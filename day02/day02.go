@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -79,26 +80,10 @@ func isIncreasing(report []int) bool {
 	return true
 }
 
-func isIncreasingWithDampener(report []int) bool {
-	fmt.Println("In function isIncreasingWithDampener")
+func checkWithDampener(report []int, checkFun func([]int) bool) bool {
 	for i, _ := range report {
-		dampenedReport := []int{}
-		dampenedReport = append(dampenedReport, report[:i]...)
-		dampenedReport = append(dampenedReport, report[i+1:]...)
-		if isIncreasing(dampenedReport) {
-			return true
-		}
-	}
-	return false
-}
-
-func isDecreasingWithDampener(report []int) bool {
-	fmt.Println("In function isDecreasingWithDampener")
-	for i, _ := range report {
-		dampenedReport := []int{}
-		dampenedReport = append(dampenedReport, report[:i]...)
-		dampenedReport = append(dampenedReport, report[i+1:]...)
-		if isDecreasing(dampenedReport) {
+		dampenedReport := slices.Concat(report[:i], report[i+1:])
+		if checkFun(dampenedReport) {
 			return true
 		}
 	}
@@ -106,5 +91,5 @@ func isDecreasingWithDampener(report []int) bool {
 }
 
 func isDampenedSafe(report []int) bool {
-	return isIncreasingWithDampener(report) || isDecreasingWithDampener(report)
+	return checkWithDampener(report, isIncreasing) || checkWithDampener(report, isDecreasing)
 }
