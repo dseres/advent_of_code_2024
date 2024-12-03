@@ -1,22 +1,46 @@
 package main
 
 import "fmt"
-import "os"
+import _ "embed"
+import "strings"
+import "strconv"
+
+//go:embed input18.txt
+var input string
 
 func main() {
-	dat, err := os.ReadFile("day18/input18.txt")
-	if err != nil {
-		panic(err)
+	nums := parseInput(input)
+	fmt.Println("Day18 solution1:", solvePuzzle1(nums))
+	fmt.Println("Day18 solution2:", solvePuzzle2(nums))
+}
+
+func solvePuzzle1(nums [][]int) int64 {
+	return 0
+}
+
+func solvePuzzle2(nums [][]int) int64 {
+	return 0
+}
+
+func parseInput(input string) (reports [][]int) {
+	lines := strings.Split(input, "\n")
+	for _, line := range lines {
+		if len(line) > 0 {
+			report := parseLine(line)
+			reports = append(reports, report)
+		}
 	}
-	input := string(dat[:])
-	fmt.Println("Day18 solution1:", solvePuzzle1(input))
-	fmt.Println("Day18 solution2:", solvePuzzle2(input))
+	return
 }
 
-func solvePuzzle1(input string) int64 {
-	return 0
-}
-
-func solvePuzzle2(input string) int64 {
-	return 0
+func parseLine(line string) (report []int) {
+	fields := strings.Fields(line)
+	for _, field := range fields {
+		val, err := strconv.Atoi(field)
+		if err != nil {
+			panic(err)
+		}
+		report = append(report, val)
+	}
+	return
 }
