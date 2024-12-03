@@ -15,28 +15,18 @@ func main() {
 	fmt.Println("Day03 solution2:", solvePuzzle2(input))
 }
 
-func solvePuzzle1(input string) int64 {
+func solvePuzzle1(input string) (sum int64) {
 	re := regexp.MustCompile("mul\\((\\d+),(\\d+)\\)")
 	matches := re.FindAllStringSubmatch(input, -1)
-	sum := int64(0)
 	for _, m := range matches {
-		i, err := strconv.Atoi(m[1])
-		if err != nil {
-			panic(err)
-		}
-		j, err := strconv.Atoi(m[2])
-		if err != nil {
-			panic(err)
-		}
-		sum += int64(i * j)
+		sum += int64(computeMul(m))
 	}
 	return sum
 }
 
-func solvePuzzle2(input string) int64 {
+func solvePuzzle2(input string) (sum int64) {
 	re := regexp.MustCompile("do\\(\\)|don't\\(\\)|mul\\((\\d+),(\\d+)\\)")
 	matches := re.FindAllStringSubmatch(input, -1)
-	sum := int64(0)
 	do := true
 	for _, m := range matches {
 		if m[0] == "do()" {
@@ -48,16 +38,20 @@ func solvePuzzle2(input string) int64 {
 			continue
 		}
 		if do {
-			i, err := strconv.Atoi(m[1])
-			if err != nil {
-				panic(err)
-			}
-			j, err := strconv.Atoi(m[2])
-			if err != nil {
-				panic(err)
-			}
-			sum += int64(i * j)
+			sum += int64(computeMul(m))
 		}
 	}
 	return sum
+}
+
+func computeMul(matches []string) int {
+	i, err := strconv.Atoi(matches[1])
+	if err != nil {
+		panic(err)
+	}
+	j, err := strconv.Atoi(matches[2])
+	if err != nil {
+		panic(err)
+	}
+	return i * j
 }
