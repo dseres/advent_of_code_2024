@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 var testInput = `MMMSXXMASM
@@ -29,11 +27,20 @@ S.S.S.S.SS
 ..M.M.M.MM
 .X.X.XMASX`
 
+var testOutput2 = `.M.S......
+..A..MSMS.
+.M.S.MAA..
+..A.ASMSM.
+.M.S.M....
+..........
+S.S.S.S.S.
+.A.A.A.A..
+M.M.M.M.M.
+..........`
+
 func TestSolution1(t *testing.T) {
 	text := parseInput([]byte(testInput))
-	printText(text)
 	rep, count := solvePuzzle1(text)
-	fmt.Println()
 	printText(rep)
 	a := assert.New(t)
 	a.Equal(int64(18), count)
@@ -41,7 +48,8 @@ func TestSolution1(t *testing.T) {
 
 func TestSolution2(t *testing.T) {
 	text := parseInput([]byte(testInput))
-	result := solvePuzzle2(text)
+	rep, count := solvePuzzle2(text)
+	printText(rep)
 	a := assert.New(t)
-	a.Equal(int64(0), result)
+	a.Equal(int64(9), count)
 }

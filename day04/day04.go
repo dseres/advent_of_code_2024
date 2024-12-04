@@ -15,11 +15,12 @@ func main() {
 	printText(text)
 	_, count := solvePuzzle1(text)
 	fmt.Println("Day04 solution1:", count)
-	fmt.Println("Day04 solution2:", solvePuzzle2(text))
+	_, count = solvePuzzle2(text)
+	fmt.Println("Day04 solution2:", count)
 }
 
 func solvePuzzle1(text [][]byte) (representation [][]byte, counter int64) {
-	representation = slices.Repeat([][]byte{slices.Repeat([]byte{byte('.')}, len(text[0]))}, len(text))
+	representation = slices.Repeat([][]byte{slices.Repeat([]byte{'.'}, len(text[0]))}, len(text))
 	xmas := []byte("XMAS")
 	for dx := -1; dx <= 1; dx++ {
 		for dy := -1; dy <= 1; dy++ {
@@ -54,8 +55,20 @@ func solvePuzzle1(text [][]byte) (representation [][]byte, counter int64) {
 	return
 }
 
-func solvePuzzle2(text [][]byte) int64 {
-	return 0
+func solvePuzzle2(text [][]byte) (representation [][]byte, counter int64) {
+	representation = slices.Repeat([][]byte{slices.Repeat([]byte{'.'}, len(text[0]))}, len(text))
+	for i := 1; i < len(text)-1; i++ {
+		for j := 1; j < len(text[i])-1; j++ {
+			if text[i][j] == 'A' &&
+				(text[i-1][j-1] == 'M' && text[i+1][j+1] == 'S' ||
+					text[i-1][j-1] == 'S' && text[i+1][j+1] == 'M') &&
+				(text[i+1][j-1] == 'M' && text[i-1][j+1] == 'S' ||
+					text[i+1][j-1] == 'S' && text[i-1][j+1] == 'M') {
+				counter++
+			}
+		}
+	}
+	return
 }
 
 func parseInput(input []byte) [][]byte {
@@ -71,4 +84,12 @@ func printText(text [][]byte) {
 	for _, line := range text {
 		fmt.Println(string(line))
 	}
+}
+
+func toString(text [][]byte) string {
+	var s string
+	for _, line := range text {
+		s += fmt.Sprintln(line)
+	}
+	return s
 }
