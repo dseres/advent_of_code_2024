@@ -4,7 +4,6 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"slices"
 )
 
 //go:embed input04.txt
@@ -12,63 +11,64 @@ var input []byte
 
 func main() {
 	text := parseInput(input)
-	printText(text)
-	_, count := solvePuzzle1(text)
-	fmt.Println("Day04 solution1:", count)
-	_, count = solvePuzzle2(text)
-	fmt.Println("Day04 solution2:", count)
+	fmt.Println("Day04 solution1:", solvePuzzle1(text))
+	fmt.Println("Day04 solution2:", solvePuzzle2(text))
 }
 
-func solvePuzzle1(text [][]byte) (representation [][]byte, counter int64) {
-	representation = slices.Repeat([][]byte{slices.Repeat([]byte{'.'}, len(text[0]))}, len(text))
-	xmas := []byte("XMAS")
+func solvePuzzle1(text [][]byte) (counter int) {
 	for dx := -1; dx <= 1; dx++ {
 		for dy := -1; dy <= 1; dy++ {
 			if dx == 0 && dy == 0 {
 				continue
 			}
-			for i := range text {
-				for j := range text[i] {
-					found := true
-					for l := 0; l < len(xmas); l++ {
-						m, n := i+l*dx, j+l*dy
-						if m < 0 || len(text) <= m || n < 0 || len(text[i]) <= n {
-							found = false
-							break
-						}
-						if text[m][n] != xmas[l] {
-							found = false
-							break
-						}
-					}
-					if found {
-						for l := 0; l < len(xmas); l++ {
-							m, n := i+l*dx, j+l*dy
-							representation[m][n] = xmas[l]
-						}
-						counter++
-					}
-				}
+			counter += checkDirection(&text, dx, dy)
+		}
+	}
+	return
+}
+
+func checkDirection(text *[][]byte, dx int, dy int) (counter int) {
+	for i := range *text {
+		for j := range (*text)[i] {
+			if xmasInText(text, i, j, dx, dy) {
+				counter++
 			}
 		}
 	}
 	return
 }
 
-func solvePuzzle2(text [][]byte) (representation [][]byte, counter int64) {
-	representation = slices.Repeat([][]byte{slices.Repeat([]byte{'.'}, len(text[0]))}, len(text))
+func xmasInText(text *[][]byte, i, j, dx, dy int) bool {
+	xmas := []byte("XMAS")
+	for l := 0; l < len(xmas); l++ {
+		m, n := i+l*dx, j+l*dy
+		if m < 0 || len(*text) <= m || n < 0 || len((*text)[i]) <= n {
+			return false
+		}
+		if (*text)[m][n] != xmas[l] {
+			return false
+		}
+	}
+	return true
+}
+
+func solvePuzzle2(text [][]byte) (counter int) {
 	for i := 1; i < len(text)-1; i++ {
 		for j := 1; j < len(text[i])-1; j++ {
-			if text[i][j] == 'A' &&
-				(text[i-1][j-1] == 'M' && text[i+1][j+1] == 'S' ||
-					text[i-1][j-1] == 'S' && text[i+1][j+1] == 'M') &&
-				(text[i+1][j-1] == 'M' && text[i-1][j+1] == 'S' ||
-					text[i+1][j-1] == 'S' && text[i-1][j+1] == 'M') {
+			if isCrossMAS(&text, i, j) {
 				counter++
 			}
 		}
 	}
 	return
+}
+
+func isCrossMAS(text *[][]byte, i int, j int) bool {
+	return (*text)[i][j] == 'A' &&
+		((*text)[i-1][j-1] == 'M' && (*text)[i+1][j+1] == 'S' ||
+			(*text)[i-1][j-1] == 'S' && (*text)[i+1][j+1] == 'M') &&
+		((*text)[i+1][j-1] == 'M' && (*text)[i-1][j+1] == 'S' ||
+			(*text)[i+1][j-1] == 'S' && (*text)[i-1][j+1] == 'M')
 }
 
 func parseInput(input []byte) [][]byte {
@@ -78,18 +78,4 @@ func parseInput(input []byte) [][]byte {
 		text = text[:len(text)-1]
 	}
 	return text
-}
-
-func printText(text [][]byte) {
-	for _, line := range text {
-		fmt.Println(string(line))
-	}
-}
-
-func toString(text [][]byte) string {
-	var s string
-	for _, line := range text {
-		s += fmt.Sprintln(line)
-	}
-	return s
 }
