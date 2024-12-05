@@ -1,40 +1,101 @@
 package main
 
-import "fmt"
-import _ "embed"
-import "strings"
-import "strconv"
+import (
+	_ "embed"
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 //go:embed input05.txt
 var input string
 
 func main() {
-	nums := parseInput(input)
-	fmt.Println("Day05 solution1:", solvePuzzle1(nums))
-	fmt.Println("Day05 solution2:", solvePuzzle2(nums))
+	ordering, rules := parseInput(input)
+	p := newPrinter(ordering)
+	fmt.Println("Day05 solution1:", solvePuzzle1(p, rules))
+	fmt.Println("Day05 solution2:", solvePuzzle2(p, rules))
 }
 
-func solvePuzzle1(nums [][]int) int64 {
-	return 0
-}
-
-func solvePuzzle2(nums [][]int) int64 {
-	return 0
-}
-
-func parseInput(input string) (reports [][]int) {
-	lines := strings.Split(input, "\n")
-	for _, line := range lines {
-		if len(line) > 0 {
-			report := parseLine(line)
-			reports = append(reports, report)
+func solvePuzzle1(p *printer, rules [][]int) (sum int64) {
+	for _, rule := range rules {
+		fmt.Println(rule, isValid(p, rule))
+		if isValid(p, rule) {
+			sum += int64(rule[int(len(rule)/2)])
 		}
 	}
 	return
 }
 
-func parseLine(line string) (report []int) {
-	fields := strings.Fields(line)
+func solvePuzzle2(p *printer, rules [][]int) int64 {
+	return 0
+}
+
+type printer struct {
+	m []bool
+}
+
+func newPrinter(ordering [][]int) *printer {
+	p := printer{}
+	p.m = make([]bool, 100*100, 100*100)
+	for _, pair := range ordering {
+		p.addOrdering(pair[0], pair[1])
+	}
+	return &p
+}
+
+func (p *printer) addOrdering(from, to int) {
+	p.m[from*100+to] = true
+	fmt.Println(from, to, p.hasOrdering(from, to))
+}
+
+func (p *printer) hasOrdering(from, to int) bool {
+	return p.m[from*100+to]
+}
+
+func isValid(p *printer, rule []int) (v bool) {
+	v = true
+	for i, page := range rule {
+		for _, next := range rule[i+1:] {
+			fmt.Println(page, next, p.hasOrdering(page, next))
+			if !p.hasOrdering(page, next) {
+				return false
+			}
+
+		}
+	}
+	return
+}
+
+func parseInput(input string) ([][]int, [][]int) {
+	parts := strings.Split(input, "\n\n")
+	return parseOrdering(parts[0]), parseRules(parts[1])
+}
+
+func parseOrdering(input string) (ordering [][]int) {
+	lines := strings.Split(input, "\n")
+	for _, line := range lines {
+		if len(line) > 0 {
+			pair := parseLine(line, "|")
+			ordering = append(ordering, pair)
+		}
+	}
+	return
+}
+
+func parseRules(input string) (rules [][]int) {
+	lines := strings.Split(input, "\n")
+	for _, line := range lines {
+		if len(line) > 0 {
+			pages := parseLine(line, ",")
+			rules = append(rules, pages)
+		}
+	}
+	return
+}
+
+func parseLine(line string, separator string) (report []int) {
+	fields := strings.Split(line, separator)
 	for _, field := range fields {
 		val, err := strconv.Atoi(field)
 		if err != nil {
