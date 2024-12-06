@@ -41,7 +41,7 @@ func TestSolution1(t *testing.T) {
 	p := newPrinter(ordering)
 	result := solvePuzzle1(p, rules)
 	a := assert.New(t)
-	a.Equal(int64(143), result)
+	a.Equal(143, result)
 }
 
 func TestSolution2(t *testing.T) {
@@ -49,5 +49,5 @@ func TestSolution2(t *testing.T) {
 	p := newPrinter(ordering)
 	result := solvePuzzle2(p, rules)
 	a := assert.New(t)
-	a.Equal(int64(0), result)
+	a.Equal(123, result)
 }

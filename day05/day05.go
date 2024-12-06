@@ -17,18 +17,26 @@ func main() {
 	fmt.Println("Day05 solution2:", solvePuzzle2(p, rules))
 }
 
-func solvePuzzle1(p *printer, rules [][]int) (sum int64) {
+func solvePuzzle1(p *printer, rules [][]int) (sum int) {
 	for _, rule := range rules {
-		fmt.Println(rule, isValid(p, rule))
 		if isValid(p, rule) {
-			sum += int64(rule[int(len(rule)/2)])
+			sum += rule[int(len(rule)/2)]
 		}
 	}
 	return
 }
 
-func solvePuzzle2(p *printer, rules [][]int) int64 {
-	return 0
+func solvePuzzle2(p *printer, rules [][]int) (sum int) {
+	for _, rule := range rules {
+		if !isValid(p, rule) {
+			valid, ok := p.impl(-1, rule)
+			fmt.Println(rule, valid, ok)
+			if ok {
+				sum += valid[len(valid)/2]
+			}
+		}
+	}
+	return
 }
 
 type printer struct {
@@ -46,18 +54,46 @@ func newPrinter(ordering [][]int) *printer {
 
 func (p *printer) addOrdering(from, to int) {
 	p.m[from*100+to] = true
-	fmt.Println(from, to, p.hasOrdering(from, to))
 }
 
 func (p *printer) hasOrdering(from, to int) bool {
 	return p.m[from*100+to]
 }
 
+func (p *printer) impl(prev int, nums []int) ([]int, bool) {
+	if len(nums) == 0 {
+		return nums, true
+	}
+	for _, n := range nums {
+		if prev == -1 || p.hasOrdering(prev, n) {
+			next := pop(nums, n)
+			next, ok := p.impl(n, next)
+			if ok {
+				valid := make([]int, 0, len(nums))
+				valid = append(valid, n)
+				valid = append(valid, next...)
+				return valid, true
+			}
+		}
+	}
+	return []int{}, false
+}
+
+func pop(nums []int, n int) (next []int) {
+
+	next = make([]int, 0, len(nums))
+	for _, m := range nums {
+		if n != m {
+			next = append(next, m)
+		}
+	}
+	return
+}
+
 func isValid(p *printer, rule []int) (v bool) {
 	v = true
 	for i, page := range rule {
 		for _, next := range rule[i+1:] {
-			fmt.Println(page, next, p.hasOrdering(page, next))
 			if !p.hasOrdering(page, next) {
 				return false
 			}
