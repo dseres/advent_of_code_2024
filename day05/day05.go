@@ -29,8 +29,7 @@ func solvePuzzle1(p *printer, rules [][]int) (sum int) {
 func solvePuzzle2(p *printer, rules [][]int) (sum int) {
 	for _, rule := range rules {
 		if !isValid(p, rule) {
-			valid, ok := p.impl(-1, rule)
-			fmt.Println(rule, valid, ok)
+			valid, ok := p.searchForGoodOrdering(true, 0, rule)
 			if ok {
 				sum += valid[len(valid)/2]
 			}
@@ -60,14 +59,27 @@ func (p *printer) hasOrdering(from, to int) bool {
 	return p.m[from*100+to]
 }
 
-func (p *printer) impl(prev int, nums []int) ([]int, bool) {
+func isValid(p *printer, rule []int) (v bool) {
+	v = true
+	for i, page := range rule {
+		for _, next := range rule[i+1:] {
+			if !p.hasOrdering(page, next) {
+				return false
+			}
+
+		}
+	}
+	return
+}
+
+func (p *printer) searchForGoodOrdering(first bool, prev int, nums []int) ([]int, bool) {
 	if len(nums) == 0 {
 		return nums, true
 	}
 	for _, n := range nums {
-		if prev == -1 || p.hasOrdering(prev, n) {
+		if first || p.hasOrdering(prev, n) {
 			next := pop(nums, n)
-			next, ok := p.impl(n, next)
+			next, ok := p.searchForGoodOrdering(false, n, next)
 			if ok {
 				valid := make([]int, 0, len(nums))
 				valid = append(valid, n)
@@ -85,19 +97,6 @@ func pop(nums []int, n int) (next []int) {
 	for _, m := range nums {
 		if n != m {
 			next = append(next, m)
-		}
-	}
-	return
-}
-
-func isValid(p *printer, rule []int) (v bool) {
-	v = true
-	for i, page := range rule {
-		for _, next := range rule[i+1:] {
-			if !p.hasOrdering(page, next) {
-				return false
-			}
-
 		}
 	}
 	return
