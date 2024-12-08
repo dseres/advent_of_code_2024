@@ -3,16 +3,16 @@ package main
 import "testing"
 import "github.com/stretchr/testify/assert"
 
-var test_input = ``
+var testInput = ``
 
 func TestSolution1(t *testing.T) {
-	result := solvePuzzle1(parseInput(test_input))
+	result := solvePuzzle1(parseInput(testInput))
 	a := assert.New(t)
 	a.Equal(0, result)
 }
 
 func TestSolution2(t *testing.T) {
-	result := solvePuzzle2(parseInput(test_input))
+	result := solvePuzzle2(parseInput(testInput))
 	a := assert.New(t)
 	a.Equal(0, result)
 }

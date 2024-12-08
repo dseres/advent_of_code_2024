@@ -11,7 +11,7 @@ import (
 var input string
 
 func main() {
-	f := createField(parseInput(input))
+	f := newField(parseInput(input))
 	fmt.Println("Day07 solution1:", solvePuzzle1(f))
 	fmt.Println("Day07 solution2:", solvePuzzle2(f))
 }
@@ -40,7 +40,7 @@ type field struct {
 	antennas map[byte][]point
 }
 
-func createField(input [][]byte) (f field) {
+func newField(input [][]byte) (f field) {
 	f.input = input
 	f.antennas = make(map[byte][]point, 0)
 	for i, line := range input {
