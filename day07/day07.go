@@ -14,11 +14,11 @@ func main() {
 	fmt.Println("Day07 solution2:", solvePuzzle2(nums))
 }
 
-func solvePuzzle1(nums [][]int) int64 {
+func solvePuzzle1(nums [][]int) int {
 	return 0
 }
 
-func solvePuzzle2(nums [][]int) int64 {
+func solvePuzzle2(nums [][]int) int {
 	return 0
 }
 

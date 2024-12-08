@@ -5,20 +5,20 @@ import _ "embed"
 import "strings"
 import "strconv"
 
-//go:embed input13.txt
+//go:embed input07.txt
 var input string
 
 func main() {
 	nums := parseInput(input)
-	fmt.Println("Day13 solution1:", solvePuzzle1(nums))
-	fmt.Println("Day13 solution2:", solvePuzzle2(nums))
+	fmt.Println("Day07 solution1:", solvePuzzle1(nums))
+	fmt.Println("Day07 solution2:", solvePuzzle2(nums))
 }
 
-func solvePuzzle1(nums [][]int) int64 {
+func solvePuzzle1(nums [][]int) int {
 	return 0
 }
 
-func solvePuzzle2(nums [][]int) int64 {
+func solvePuzzle2(nums [][]int) int {
 	return 0
 }
 
