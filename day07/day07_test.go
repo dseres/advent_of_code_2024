@@ -1,18 +1,32 @@
 package main
 
-import "testing"
-import "github.com/stretchr/testify/assert"
+import (
+	"fmt"
+	"testing"
 
-var test_input = ``
+	"github.com/stretchr/testify/assert"
+)
+
+var test_input = `190: 10 19
+3267: 81 40 27
+83: 17 5
+156: 15 6
+7290: 6 8 6 15
+161011: 16 10 13
+192: 17 8 14
+21037: 9 7 18 13
+292: 11 6 16 20
+`
 
 func TestSolution1(t *testing.T) {
 	result := solvePuzzle1(parseInput(test_input))
+	fmt.Println(parseInput(test_input))
 	a := assert.New(t)
-	a.Equal(0, result)
+	a.Equal(3749, result)
 }
 
 func TestSolution2(t *testing.T) {
 	result := solvePuzzle2(parseInput(test_input))
 	a := assert.New(t)
-	a.Equal(0, result)
+	a.Equal(11387, result)
 }

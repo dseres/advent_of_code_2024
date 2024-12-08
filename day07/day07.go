@@ -1,12 +1,23 @@
 package main
 
-import "fmt"
-import _ "embed"
-import "strings"
-import "strconv"
+import (
+	_ "embed"
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+)
 
 //go:embed input07.txt
 var input string
+
+type operand int
+
+const (
+	ADD operand = iota
+	MUL
+	CONCAT
+)
 
 func main() {
 	nums := parseInput(input)
@@ -15,11 +26,67 @@ func main() {
 }
 
 func solvePuzzle1(nums [][]int) int {
-	return 0
+	sum := 0
+	for _, row := range nums {
+		if valid(row, false) {
+			sum += row[0]
+		}
+	}
+	return sum
 }
 
 func solvePuzzle2(nums [][]int) int {
-	return 0
+	sum := 0
+	for _, row := range nums {
+		if valid(row, true) {
+			sum += row[0]
+		}
+	}
+	return sum
+}
+
+func valid(nums []int, concat bool) bool {
+	if testOp(nums[0], concat, nums[2:], nums[1], ADD) {
+		return true
+	}
+	if testOp(nums[0], concat, nums[2:], nums[1], MUL) {
+		return true
+	}
+	if concat && testOp(nums[0], concat, nums[2:], nums[1], CONCAT) {
+		return true
+	}
+	return false
+}
+
+func testOp(required int, concat bool, nums []int, computed int, op operand) bool {
+	if len(nums) == 0 {
+		return computed == required
+	}
+	next := doOp(computed, nums[0], op)
+	if testOp(required, concat, nums[1:], next, ADD) {
+		return true
+	}
+	if testOp(required, concat, nums[1:], next, MUL) {
+		return true
+	}
+	if concat && testOp(required, concat, nums[1:], next, CONCAT) {
+		return true
+	}
+	return false
+}
+
+func doOp(i, j int, op operand) int {
+	next := 0
+	switch op {
+	case ADD:
+		next = i + j
+	case MUL:
+		next = i * j
+	case CONCAT:
+		nextStr := fmt.Sprintf("%v%v", i, j)
+		next, _ = strconv.Atoi(nextStr)
+	}
+	return next
 }
 
 func parseInput(input string) (reports [][]int) {
@@ -34,7 +101,7 @@ func parseInput(input string) (reports [][]int) {
 }
 
 func parseLine(line string) (report []int) {
-	fields := strings.Fields(line)
+	fields := regexp.MustCompile(`:?\s+`).Split(line, -1)
 	for _, field := range fields {
 		val, err := strconv.Atoi(field)
 		if err != nil {
