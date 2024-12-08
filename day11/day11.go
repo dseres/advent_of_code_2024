@@ -5,7 +5,7 @@ import _ "embed"
 import "strings"
 import "strconv"
 
-//go:embed input07.txt
+//go:embed input11.txt
 var input string
 
 func main() {
@@ -22,25 +22,25 @@ func solvePuzzle2(nums [][]int) int {
 	return 0
 }
 
-func parseInput(input string) (reports [][]int) {
+func parseInput(input string) (parsed [][]int) {
 	lines := strings.Split(input, "\n")
 	for _, line := range lines {
 		if len(line) > 0 {
 			report := parseLine(line)
-			reports = append(reports, report)
+			parsed = append(parsed, report)
 		}
 	}
 	return
 }
 
-func parseLine(line string) (report []int) {
+func parseLine(line string) (nums []int) {
 	fields := strings.Fields(line)
 	for _, field := range fields {
 		val, err := strconv.Atoi(field)
 		if err != nil {
 			panic(err)
 		}
-		report = append(report, val)
+		nums = append(nums, val)
 	}
 	return
 }
