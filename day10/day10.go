@@ -15,6 +15,7 @@ type tile struct {
 	height     uint8
 	visited    bool
 	trailheads map[point]bool
+	routes     map[string]bool
 }
 
 type point = image.Point
@@ -23,23 +24,23 @@ var directions []point = []point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
 
 func main() {
 	tiles := parseInput(input)
-	fmt.Println("Day07 solution1:", solvePuzzle1(tiles))
-	fmt.Println("Day07 solution2:", solvePuzzle2(tiles))
+	solution1, solution2 := solvePuzzle1(tiles)
+	fmt.Println("Day07 solution1:", solution1)
+	fmt.Println("Day07 solution2:", solution2)
 }
 
-func solvePuzzle1(tiles [][]tile) int {
+func solvePuzzle1(tiles [][]tile) (int, int) {
 	starts := findStartPoints(tiles)
 	fmt.Println(starts)
-	sum := 0
+	sum_heads, sum_routes := 0, 0
 	for _, sp := range starts {
-		sum += len(search4routes(sp, tiles))
+		search4routes(sp, tiles)
+		t := tiles[sp.X][sp.Y]
+		sum_heads += len(t.trailheads)
+		sum_routes += len(t.routes)
 	}
 	fmt.Println(tiles)
-	return sum
-}
-
-func solvePuzzle2(tiles [][]tile) int {
-	return 0
+	return sum_heads, sum_routes
 }
 
 func parseInput(input string) (parsed [][]tile) {
@@ -56,7 +57,7 @@ func parseInput(input string) (parsed [][]tile) {
 func parseLine(line string) (tiles []tile) {
 	for _, c := range line {
 		height := uint8(c - '0')
-		tiles = append(tiles, tile{height: height, trailheads: map[point]bool{}})
+		tiles = append(tiles, tile{height: height, trailheads: map[point]bool{}, routes: map[string]bool{}})
 	}
 	return
 }
@@ -73,29 +74,41 @@ func findStartPoints(tiles [][]tile) (starts []point) {
 	return
 }
 
-func search4routes(sp point, tiles [][]tile) map[point]bool {
-	if tiles[sp.X][sp.Y].height == 9 {
-		tiles[sp.X][sp.Y].visited = true
-		tiles[sp.X][sp.Y].trailheads[sp] = true
-		return tiles[sp.X][sp.Y].trailheads
+func search4routes(sp point, tiles [][]tile) {
+	st := &tiles[sp.X][sp.Y]
+	st.visited = true
+	if st.height == 9 {
+		st.trailheads[sp] = true
+		st.routes[appendRoute(sp, st, "")] = true
+		return
 	}
-	trailheads := map[point]bool{}
 	for _, d := range directions {
 		np := sp.Add(d)
-		if valid(np, tiles) &&
-			tiles[sp.X][sp.Y].height+1 == tiles[np.X][np.Y].height {
-			if !tiles[np.X][np.Y].visited {
-				maps.Copy(trailheads, search4routes(np, tiles))
-			} else {
-				maps.Copy(trailheads, tiles[np.X][np.Y].trailheads)
+		if valid(np, tiles) {
+			nt := &tiles[np.X][np.Y]
+			if nt.height == st.height+1 {
+				if !nt.visited {
+					search4routes(np, tiles)
+				}
+				maps.Copy(st.trailheads, nt.trailheads)
+				copyRoutes(sp, st, nt)
 			}
+
 		}
 	}
-	tiles[sp.X][sp.Y].visited = true
-	tiles[sp.X][sp.Y].trailheads = trailheads
-	return trailheads
 }
 
 func valid(p point, tiles [][]tile) bool {
 	return 0 <= p.X && p.X < len(tiles) && 0 <= p.Y && p.Y < len(tiles[p.X])
+}
+
+func appendRoute(p point, t *tile, r string) string {
+	actual := fmt.Sprintf("{%v,%v,%v}", p.X, p.Y, string('0'+t.height))
+	return actual + r
+}
+
+func copyRoutes(p point, t, nt *tile) {
+	for r, _ := range nt.routes {
+		t.routes[appendRoute(p, t, r)] = true
+	}
 }
