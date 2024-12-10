@@ -78,7 +78,7 @@ func search4routes(sp point, tiles [][]tile) {
 	st.visited = true
 	if st.height == 9 {
 		st.trailheads[sp] = true
-		st.routes[appendRoute(sp, st, 0)] = true
+		st.routes[appendRoute(sp, 0)] = true
 		return
 	}
 	for _, d := range directions {
@@ -101,12 +101,12 @@ func valid(p point, tiles [][]tile) bool {
 	return 0 <= p.X && p.X < len(tiles) && 0 <= p.Y && p.Y < len(tiles[p.X])
 }
 
-func appendRoute(p point, t *tile, r int) int {
-	return r*1000 + p.X*100 + p.Y*10 + int(t.height)
+func appendRoute(p point, r int) int {
+	return r*100 + p.X*10 + p.Y
 }
 
 func copyRoutes(p point, t, nt *tile) {
 	for r := range nt.routes {
-		t.routes[appendRoute(p, t, r)] = true
+		t.routes[appendRoute(p, r)] = true
 	}
 }
