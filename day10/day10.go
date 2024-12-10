@@ -31,7 +31,6 @@ func main() {
 
 func solvePuzzle1(tiles [][]tile) (int, int) {
 	starts := findStartPoints(tiles)
-	fmt.Println(starts)
 	sum_heads, sum_routes := 0, 0
 	for _, sp := range starts {
 		search4routes(sp, tiles)
@@ -39,7 +38,6 @@ func solvePuzzle1(tiles [][]tile) (int, int) {
 		sum_heads += len(t.trailheads)
 		sum_routes += len(t.routes)
 	}
-	fmt.Println(tiles)
 	return sum_heads, sum_routes
 }
 
@@ -63,7 +61,6 @@ func parseLine(line string) (tiles []tile) {
 }
 
 func findStartPoints(tiles [][]tile) (starts []point) {
-	fmt.Println(tiles)
 	for x, line := range tiles {
 		for y, t := range line {
 			if t.height == 0 {
