@@ -102,7 +102,7 @@ func valid(p point, tiles [][]tile) bool {
 }
 
 func appendRoute(p point, r int) int {
-	return r*100 + p.X*10 + p.Y
+	return r*1000 + p.X*100 + p.Y
 }
 
 func copyRoutes(p point, t, nt *tile) {
