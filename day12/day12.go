@@ -225,7 +225,7 @@ func (g *garden) getRowsAndColumns(region []*plot) (rows map[int][]*plot, column
 
 func (g *garden) countHorizontalSides(rows map[int][]*plot) (count int) {
 	for _, row := range rows {
-		// create lists of indeces, we have to count the distinct intervals in it
+		// create lists of indices, we have to count the distinct intervals in it
 		xs1, xs2 := []int{}, []int{}
 		for _, p := range row {
 			if g.getNeighbour(p, directions[0]) == nil {
