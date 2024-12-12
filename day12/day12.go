@@ -202,34 +202,8 @@ func (g *garden) computeSidesFor(i int) (count int) {
 	region := g.regions[i]
 	// Sides can be computed from slices
 	rows, columns := g.getRowsAndColumns(region)
-	// region is sorted from left to right and from top to bottom, so rows and columns will be sorted too
-	for _, row := range rows {
-		// create lists of indeces, we have to count the distinct intervals in it
-		xs1, xs2 := []int{}, []int{}
-		for _, p := range row {
-			if g.getNeighbour(p, directions[0]) == nil {
-				xs1 = append(xs1, p.point.Y)
-			}
-			if g.getNeighbour(p, directions[2]) == nil {
-				xs2 = append(xs2, p.point.Y)
-			}
-		}
-		count += getDistinctIntervals(xs1)
-		count += getDistinctIntervals(xs2)
-	}
-	for _, column := range columns {
-		ys1, ys2 := []int{}, []int{}
-		for _, p := range column {
-			if g.getNeighbour(p, directions[1]) == nil {
-				ys1 = append(ys1, p.point.X)
-			}
-			if g.getNeighbour(p, directions[3]) == nil {
-				ys2 = append(ys2, p.point.X)
-			}
-		}
-		count += getDistinctIntervals(ys1)
-		count += getDistinctIntervals(ys2)
-	}
+	count += g.countHorizontalSides(rows)
+	count += g.countVerticalSides(columns)
 	return
 }
 
@@ -245,6 +219,41 @@ func (g *garden) getRowsAndColumns(region []*plot) (rows map[int][]*plot, column
 			columns[y] = []*plot{}
 		}
 		columns[y] = append(columns[y], p)
+	}
+	return
+}
+
+func (g *garden) countHorizontalSides(rows map[int][]*plot) (count int) {
+	for _, row := range rows {
+		// create lists of indeces, we have to count the distinct intervals in it
+		xs1, xs2 := []int{}, []int{}
+		for _, p := range row {
+			if g.getNeighbour(p, directions[0]) == nil {
+				xs1 = append(xs1, p.point.Y)
+			}
+			if g.getNeighbour(p, directions[2]) == nil {
+				xs2 = append(xs2, p.point.Y)
+			}
+		}
+		count += getDistinctIntervals(xs1)
+		count += getDistinctIntervals(xs2)
+	}
+	return
+}
+
+func (g *garden) countVerticalSides(columns map[int][]*plot) (count int) {
+	for _, column := range columns {
+		ys1, ys2 := []int{}, []int{}
+		for _, p := range column {
+			if g.getNeighbour(p, directions[1]) == nil {
+				ys1 = append(ys1, p.point.X)
+			}
+			if g.getNeighbour(p, directions[3]) == nil {
+				ys2 = append(ys2, p.point.X)
+			}
+		}
+		count += getDistinctIntervals(ys1)
+		count += getDistinctIntervals(ys2)
 	}
 	return
 }
