@@ -11,13 +11,17 @@ import (
 var input string
 
 func main() {
-	plots := parseInput(input)
-	fmt.Println("Day07 solution1:", solvePuzzle1(plots))
-	fmt.Println("Day07 solution2:", solvePuzzle2(plots))
+	garden := parseInput(input)
+	fmt.Println("Day12 solution1:", solvePuzzle1(garden))
+	fmt.Println("Day12 solution2:", solvePuzzle2(garden))
 }
 
 func solvePuzzle1(g garden) int {
-	return 0
+	sum := 0
+	for i := range g.regions {
+		sum += g.getArea(i) * int(g.getPerimeter(i))
+	}
+	return sum
 }
 
 func solvePuzzle2(g garden) int {
@@ -49,6 +53,8 @@ func parseInput(input string) (g garden) {
 			g.plots = append(g.plots, plotLine)
 		}
 	}
+	g.computeRegions()
+	g.computeFences()
 	return
 }
 
@@ -100,7 +106,8 @@ func (g *garden) printRegions() string {
 				s += ", "
 			}
 		}
-		s += "]\n"
+		s += "] "
+		s += fmt.Sprintf("Area: %v, Fences: %v\n", g.getArea(i), g.getPerimeter(i))
 	}
 	return s
 }
@@ -146,4 +153,33 @@ func (g *garden) getNext(p *plot, dir image.Point) *plot {
 
 func (g *garden) valid(p image.Point) bool {
 	return 0 <= p.X && p.X < len(g.plots) && 0 <= p.Y && p.Y < len(g.plots[p.X])
+}
+
+func (g *garden) computeFences() {
+	for x, line := range g.plots {
+		for y := range line {
+			g.computeFencesFor(x, y)
+		}
+	}
+}
+
+func (g *garden) computeFencesFor(x, y int) {
+	p := g.get(x, y)
+	for _, d := range directions {
+		np := p.point.Add(d)
+		if !g.valid(np) || g.get(np.X, np.Y).id != p.id {
+			p.fences++
+		}
+	}
+}
+
+func (g *garden) getArea(i int) int {
+	return len(g.regions[i])
+}
+
+func (g *garden) getPerimeter(i int) (perimeter uint) {
+	for _, p := range g.regions[i] {
+		perimeter += p.fences
+	}
+	return
 }
