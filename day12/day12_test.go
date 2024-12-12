@@ -30,24 +30,53 @@ MIIIIIJJEE
 MIIISIJEEE
 MMMISSJEEE`
 
+var testInput4 = `EEEEE
+EXXXX
+EEEEE
+EXXXX
+EEEEE`
+
+var testInput5 = `AAAAAA
+AAABBA
+AAABBA
+ABBAAA
+ABBAAA
+AAAAAA`
+
 func TestSolution1(t *testing.T) {
 	a := assert.New(t)
 
-	g := parseInput(testInput1)
+	g := newGarden(testInput1)
 	fmt.Println(g)
 	a.Equal(140, solvePuzzle1(g))
 
-	g = parseInput(testInput2)
-	fmt.Println(g)
+	g = newGarden(testInput2)
+	// fmt.Println(g)
 	a.Equal(772, solvePuzzle1(g))
 
-	g = parseInput(testInput3)
-	fmt.Println(g)
+	g = newGarden(testInput3)
+	// fmt.Println(g)
 	a.Equal(1930, solvePuzzle1(g))
 }
 
 func TestSolution2(t *testing.T) {
-	result := solvePuzzle2(parseInput(testInput1))
 	a := assert.New(t)
-	a.Equal(0, result)
+
+	g := newGarden(testInput1)
+	// fmt.Println(g)
+	a.Equal(80, solvePuzzle2(g))
+
+	g = newGarden(testInput4)
+	// fmt.Println(g)
+	a.Equal(236, solvePuzzle2(g))
+
+	g = newGarden(testInput5)
+	// fmt.Println(g)
+	a.Equal(368, solvePuzzle2(g))
+
+	g = newGarden(testInput3)
+	fmt.Println(g)
+	a.Equal(22, g.computeSidesFor(2))
+	a.Equal(12, g.computeSidesFor(3))
+	a.Equal(1206, solvePuzzle2(g))
 }

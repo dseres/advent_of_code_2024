@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"image"
+	"slices"
 	"strings"
 )
 
@@ -11,7 +12,8 @@ import (
 var input string
 
 func main() {
-	garden := parseInput(input)
+	garden := newGarden(input)
+	// fmt.Println(garden)
 	fmt.Println("Day12 solution1:", solvePuzzle1(garden))
 	fmt.Println("Day12 solution2:", solvePuzzle2(garden))
 }
@@ -25,7 +27,11 @@ func solvePuzzle1(g garden) int {
 }
 
 func solvePuzzle2(g garden) int {
-	return 0
+	sum := 0
+	for i := range g.regions {
+		sum += g.getArea(i) * g.computeSidesFor(i)
+	}
+	return sum
 }
 
 var directions []image.Point = []image.Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
@@ -34,12 +40,19 @@ type plot struct {
 	plant  rune
 	point  image.Point
 	id     int
-	fences uint
+	fences int
 }
 
 type garden struct {
 	plots   [][]plot
 	regions [][]*plot
+}
+
+func newGarden(input string) (g garden) {
+	g = parseInput(input)
+	g.computeRegions()
+	g.computeFences()
+	return
 }
 
 func parseInput(input string) (g garden) {
@@ -53,8 +66,6 @@ func parseInput(input string) (g garden) {
 			g.plots = append(g.plots, plotLine)
 		}
 	}
-	g.computeRegions()
-	g.computeFences()
 	return
 }
 
@@ -78,7 +89,7 @@ func (g *garden) printIds() string {
 	s := ""
 	for _, l := range g.plots {
 		for _, p := range l {
-			s += fmt.Sprintf("%3d ", p.id)
+			s += fmt.Sprintf("%4d ", p.id)
 		}
 		s += "\n"
 	}
@@ -107,7 +118,7 @@ func (g *garden) printRegions() string {
 			}
 		}
 		s += "] "
-		s += fmt.Sprintf("Area: %v, Fences: %v\n", g.getArea(i), g.getPerimeter(i))
+		s += fmt.Sprintf("Area: %v, Fences: %v, Sides: %v\n", g.getArea(i), g.getPerimeter(i), g.computeSidesFor(i))
 	}
 	return s
 }
@@ -128,7 +139,15 @@ func (g *garden) computeRegions() {
 			}
 		}
 	}
+	// sort regions
+	for _, region := range g.regions {
+		slices.SortFunc(region, comparePlotPtr)
+	}
 	return
+}
+
+func comparePlotPtr(a, b *plot) int {
+	return slices.Compare([]int{a.point.X, a.point.Y}, []int{b.point.X, b.point.Y})
 }
 
 func (g *garden) findPlotsInRegion(p *plot) {
@@ -155,29 +174,100 @@ func (g *garden) valid(p image.Point) bool {
 	return 0 <= p.X && p.X < len(g.plots) && 0 <= p.Y && p.Y < len(g.plots[p.X])
 }
 
+func (g *garden) getNeighbour(p *plot, dir image.Point) *plot {
+	next := g.getNext(p, dir)
+	if next == nil || next.id != p.id {
+		return nil
+	}
+	return next
+}
+
 func (g *garden) computeFences() {
-	for x, line := range g.plots {
+	for _, line := range g.plots {
 		for y := range line {
-			g.computeFencesFor(x, y)
+			g.computeFencesFor(&line[y])
 		}
 	}
 }
 
-func (g *garden) computeFencesFor(x, y int) {
-	p := g.get(x, y)
+func (g *garden) computeFencesFor(p *plot) {
 	for _, d := range directions {
-		np := p.point.Add(d)
-		if !g.valid(np) || g.get(np.X, np.Y).id != p.id {
+		if g.getNeighbour(p, d) == nil {
 			p.fences++
 		}
 	}
+}
+
+func (g *garden) computeSidesFor(i int) (count int) {
+	region := g.regions[i]
+	// Sides can be computed from slices
+	rows, columns := g.getRowsAndColumns(region)
+	// region is sorted from left to right and from top to bottom, so rows and columns will be sorted too
+	for _, row := range rows {
+		// create lists of indeces, we have to count the distinct intervals in it
+		xs1, xs2 := []int{}, []int{}
+		for _, p := range row {
+			if g.getNeighbour(p, directions[0]) == nil {
+				xs1 = append(xs1, p.point.Y)
+			}
+			if g.getNeighbour(p, directions[2]) == nil {
+				xs2 = append(xs2, p.point.Y)
+			}
+		}
+		count += getDistinctIntervals(xs1)
+		count += getDistinctIntervals(xs2)
+	}
+	for _, column := range columns {
+		ys1, ys2 := []int{}, []int{}
+		for _, p := range column {
+			if g.getNeighbour(p, directions[1]) == nil {
+				ys1 = append(ys1, p.point.X)
+			}
+			if g.getNeighbour(p, directions[3]) == nil {
+				ys2 = append(ys2, p.point.X)
+			}
+		}
+		count += getDistinctIntervals(ys1)
+		count += getDistinctIntervals(ys2)
+	}
+	return
+}
+
+func (g *garden) getRowsAndColumns(region []*plot) (rows map[int][]*plot, columns map[int][]*plot) {
+	rows, columns = map[int][]*plot{}, map[int][]*plot{}
+	for _, p := range region {
+		x, y := p.point.X, p.point.Y
+		if _, ok := rows[x]; !ok {
+			rows[x] = []*plot{}
+		}
+		rows[x] = append(rows[x], p)
+		if _, ok := columns[y]; !ok {
+			columns[y] = []*plot{}
+		}
+		columns[y] = append(columns[y], p)
+	}
+	return
+}
+
+func getDistinctIntervals(nums []int) int {
+	if len(nums) == 0 {
+		return 0
+	}
+	slices.Sort(nums)
+	count := 1
+	for i := 1; i < len(nums); i++ {
+		if nums[i-1]+1 < nums[i] {
+			count++
+		}
+	}
+	return count
 }
 
 func (g *garden) getArea(i int) int {
 	return len(g.regions[i])
 }
 
-func (g *garden) getPerimeter(i int) (perimeter uint) {
+func (g *garden) getPerimeter(i int) (perimeter int) {
 	for _, p := range g.regions[i] {
 		perimeter += p.fences
 	}
