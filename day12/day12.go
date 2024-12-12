@@ -10,120 +10,140 @@ import (
 //go:embed input12.txt
 var input string
 
-var directions []image.Point = []image.Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
-
-type plot struct {
-	Plant            rune
-	X, Y, Id, Fences int
-}
-
 func main() {
 	plots := parseInput(input)
 	fmt.Println("Day07 solution1:", solvePuzzle1(plots))
 	fmt.Println("Day07 solution2:", solvePuzzle2(plots))
 }
 
-func solvePuzzle1(plots [][]plot) int {
+func solvePuzzle1(g garden) int {
 	return 0
 }
 
-func solvePuzzle2(plots [][]plot) int {
+func solvePuzzle2(g garden) int {
 	return 0
 }
 
-func parseInput(input string) (plots [][]plot) {
+var directions []image.Point = []image.Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
+
+type plot struct {
+	plant  rune
+	point  image.Point
+	id     int
+	fences uint
+}
+
+type garden struct {
+	plots   [][]plot
+	regions [][]*plot
+}
+
+func parseInput(input string) (g garden) {
 	lines := strings.Split(input, "\n")
 	for x, line := range lines {
 		if len(line) > 0 {
 			var plotLine []plot
 			for y, r := range line {
-				plotLine = append(plotLine, plot{r, x, y, -1, 0})
+				plotLine = append(plotLine, plot{r, image.Point{x, y}, -1, 0})
 			}
-			plots = append(plots, plotLine)
+			g.plots = append(g.plots, plotLine)
 		}
 	}
 	return
 }
 
-func printPlots(plots [][]plot) {
-	printPlants(plots)
-	fmt.Println()
-	printIds(plots)
-	fmt.Println()
-	printFences(plots)
+// Implement Stringer
+func (g garden) String() string {
+	return g.printPlants() + "\n" + g.printIds() + "\n" + g.printFences() + "\n" + g.printRegions()
 }
 
-func printPlants(plots [][]plot) {
-	for _, l := range plots {
+func (g *garden) printPlants() string {
+	s := ""
+	for _, l := range g.plots {
 		for _, p := range l {
-			fmt.Print(string(p.Plant))
+			s += fmt.Sprint(string(p.plant))
 		}
-		fmt.Println()
+		s += "\n"
 	}
+	return s
 }
 
-func printIds(plots [][]plot) {
-	for _, l := range plots {
+func (g *garden) printIds() string {
+	s := ""
+	for _, l := range g.plots {
 		for _, p := range l {
-			fmt.Printf("%3d ", p.Id)
+			s += fmt.Sprintf("%3d ", p.id)
 		}
-		fmt.Println()
+		s += "\n"
 	}
+	return s
 }
 
-func printFences(plots [][]plot) {
-	for _, l := range plots {
+func (g *garden) printFences() string {
+	s := ""
+	for _, l := range g.plots {
 		for _, p := range l {
-			fmt.Print(p.Fences)
+			s += fmt.Sprint(p.fences)
 		}
-		fmt.Println()
+		s += "\n"
 	}
+	return s
 }
 
-func computeRegions(plots [][]plot) (regions [][]*plot) {
-	for x, line := range plots {
-		for y, p := range line {
-			if p.Id == -1 {
+func (g *garden) printRegions() string {
+	s := ""
+	for i, r := range g.regions {
+		s += fmt.Sprintf("Region %v: [", i)
+		for j, p := range r {
+			s += fmt.Sprintf("{%v, %v}", p.point.X, p.point.Y)
+			if j < len(r)-1 {
+				s += ", "
+			}
+		}
+		s += "]\n"
+	}
+	return s
+}
+
+func (g *garden) get(x, y int) *plot {
+	return &g.plots[x][y]
+}
+
+func (g *garden) computeRegions() {
+	for x, line := range g.plots {
+		for y := range line {
+			p := g.get(x, y)
+			if p.id == -1 {
 				// New region
-				plots[x][y].Id = len(regions)
-				region := []*plot{&plots[x][y]}
-				region = append(region, checkNeigbours(plots, plots[x][y])...)
-				regions = append(regions, region)
+				p.id = len(g.regions)
+				g.regions = append(g.regions, []*plot{p})
+				g.findPlotsInRegion(p)
 			}
 		}
 	}
 	return
 }
 
-func checkNeigbours(plots [][]plot, p plot) (region []*plot) {
-	for _, n := range p.getNeighbours(plots) {
-		if n.Id == -1 && n.Plant == p.Plant {
-			n.Id = p.Id
-			region = append(region, &plots[n.X][n.Y])
-			region = append(region, checkNeigbours(plots, plots[n.X][n.Y])...)
+func (g *garden) findPlotsInRegion(p *plot) {
+	for _, dir := range directions {
+		if next := g.getNext(p, dir); next != nil && next.id == -1 && next.plant == p.plant {
+			// Add n to region
+			next.id = p.id
+			g.regions[p.id] = append(g.regions[p.id], next)
+			g.findPlotsInRegion(next)
 		}
 	}
 	return
 }
 
-func (p *plot) getNeighbours(plots [][]plot) (neighbours []*plot) {
-	for _, d := range directions {
-		if n := p.getNeighbour(plots, d); n != nil {
-			neighbours = append(neighbours, n)
-		}
-	}
-	return
-}
-
-func (p *plot) getNeighbour(plots [][]plot, d image.Point) *plot {
-	x := p.X + d.X
-	y := p.Y + d.Y
-	if valid(plots, x, y) {
-		return &plots[x][y]
+func (g *garden) getNext(p *plot, dir image.Point) *plot {
+	nextPos := p.point.Add(dir)
+	if g.valid(nextPos) {
+		return g.get(nextPos.X, nextPos.Y)
 	}
 	return nil
 }
 
-func valid(plots [][]plot, x, y int) bool {
-	return 0 <= x && x < len(plots) && 0 <= y && y < len(plots[x])
+func (g *garden) valid(p image.Point) bool {
+	return 0 <= p.X && p.X < len(g.plots) && 0 <= p.Y && p.Y < len(g.plots[p.X])
 }

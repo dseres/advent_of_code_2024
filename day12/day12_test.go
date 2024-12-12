@@ -31,10 +31,9 @@ MIIISIJEEE
 MMMISSJEEE`
 
 func TestSolution1(t *testing.T) {
-	p := parseInput(testInput1)
-	computeRegions(p)
-	fmt.Println(p)
-	printPlots(p)
+	g := parseInput(testInput1)
+	g.computeRegions()
+	fmt.Println(g)
 
 	result := solvePuzzle1(parseInput(testInput1))
 	a := assert.New(t)
