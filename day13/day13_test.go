@@ -25,17 +25,18 @@ Prize: X=18641, Y=10279
 
 func TestSolution(t *testing.T) {
 	cms := parseInput(testInput)
-	result := solvePuzzle1(cms)
 	a := assert.New(t)
-	a.Equal(480, result)
 
-	prepareForPuzzle2(cms)
-	_, ok0 := getMinCost2(cms[0])
+	a.Equal(480, solvePuzzle(cms, getMinBruteForce))
+	a.Equal(480, solvePuzzle(cms, getMinUsingEquations))
+
+	increasePrizes(cms)
+	_, ok0 := getMinUsingEquations(cms[0])
 	a.False(ok0)
-	_, ok1 := getMinCost2(cms[1])
+	_, ok1 := getMinUsingEquations(cms[1])
 	a.True(ok1)
-	_, ok2 := getMinCost2(cms[2])
+	_, ok2 := getMinUsingEquations(cms[2])
 	a.False(ok2)
-	_, ok3 := getMinCost2(cms[3])
+	_, ok3 := getMinUsingEquations(cms[3])
 	a.True(ok3)
 }
