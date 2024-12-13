@@ -14,8 +14,9 @@ import (
 var input string
 
 const (
-	A_TOKEN = 3
-	B_TOKEN = 1
+	A_TOKEN    = 3
+	B_TOKEN    = 1
+	BIG_NUMBER = 10000000000000
 )
 
 func main() {
@@ -49,19 +50,13 @@ func parseInput(input string) (parsed []clawMachine) {
 }
 
 func parseClawMachine(block string) (cm clawMachine) {
-	lines := strings.Split(block, "\n")
-	rb := regexp.MustCompile(`^Button [AB]: X\+(\d+), Y\+(\d+)\s*$`)
-	rm := regexp.MustCompile(`^Prize: X=(\d+), Y=(\d+)\s*$`)
-	m1 := rb.FindAllStringSubmatch(lines[0], -1)
-	m2 := rb.FindAllStringSubmatch(lines[1], -1)
-	m3 := rm.FindAllStringSubmatch(lines[2], -1)
-	ax, _ := strconv.Atoi(m1[0][1])
-	ay, _ := strconv.Atoi(m1[0][2])
-	bx, _ := strconv.Atoi(m2[0][1])
-	by, _ := strconv.Atoi(m2[0][2])
-	px, _ := strconv.Atoi(m3[0][1])
-	py, _ := strconv.Atoi(m3[0][2])
-	return clawMachine{image.Point{ax, ay}, image.Point{bx, by}, image.Point{px, py}}
+	strs := regexp.MustCompile(`\d+`).FindAllString(block, -1)
+	ints := make([]int, 0, 6)
+	for _, s := range strs {
+		i, _ := strconv.Atoi(s)
+		ints = append(ints, i)
+	}
+	return clawMachine{image.Point{ints[0], ints[1]}, image.Point{ints[2], ints[3]}, image.Point{ints[4], ints[5]}}
 }
 
 func getMinBruteForce(c clawMachine) (int, bool) {
@@ -83,8 +78,8 @@ func getMinBruteForce(c clawMachine) (int, bool) {
 func increasePrizes(cms []clawMachine) {
 	for i := range cms {
 		cm := &cms[i]
-		cm.p.X += 10000000000000
-		cm.p.Y += 10000000000000
+		cm.p.X += BIG_NUMBER
+		cm.p.Y += BIG_NUMBER
 	}
 }
 
