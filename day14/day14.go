@@ -3,7 +3,6 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"image"
 	"math"
 	"regexp"
 	"slices"
@@ -20,8 +19,10 @@ type robot struct {
 }
 
 func main() {
-	fmt.Println("Day07 solution1:", solvePuzzle1(parseInput(input)))
-	fmt.Println("Day07 solution2:", solvePuzzle2(parseInput(input)))
+	robots := parseInput(input)
+	robots2 := slices.Clone(robots)
+	fmt.Println("Day07 solution1:", solvePuzzle1(robots))
+	fmt.Println("Day07 solution2:", solvePuzzle2(robots2))
 }
 
 func solvePuzzle1(robots []robot) int {
@@ -33,21 +34,18 @@ func solvePuzzle1(robots []robot) int {
 func solvePuzzle2(robots []robot) int {
 	start := slices.Clone(robots)
 	w, h := getDimension(robots)
-	for i := 0; 0 <= i; i++ {
+	min, ind := math.MaxInt, -1
+	for i := 1; 0 <= i; i++ {
 		step(w, h, robots)
-		count := countRobotsHaving2Neighbours(robots)
-		if 150 < count {
-			// time.Sleep(100 * time.Millisecond)
-			// fmt.Printf("\nStep %v, count:%v\n", i+1, count)
-			// printRobots(w, h, robots)
-			return i + 1
+		dist := getEntropy(robots)
+		if dist < min {
+			min, ind = dist, i
 		}
 		if slices.Equal(robots, start) {
-			// fmt.Printf("Start position repeats in %v steps.\n", i)
 			break
 		}
 	}
-	return 0
+	return ind
 }
 
 func parseInput(input string) (robots []robot) {
@@ -61,7 +59,7 @@ func parseInput(input string) (robots []robot) {
 }
 
 func parseLine(line string) (r robot) {
-	strs := regexp.MustCompile("-?\\d+").FindAllString(line, -1)
+	strs := regexp.MustCompile(`-?\d+`).FindAllString(line, -1)
 	r.px, _ = strconv.Atoi(strs[0])
 	r.py, _ = strconv.Atoi(strs[1])
 	r.vx, _ = strconv.Atoi(strs[2])
@@ -120,25 +118,6 @@ func getSafetyFactor(width, height int, robots []robot) int {
 	return a * b * c * d
 }
 
-func printRobots(w, h int, robots []robot) {
-	for i := range w {
-		for j := range h {
-			count := 0
-			for _, r := range robots {
-				if r.px == i && r.py == j {
-					count++
-				}
-			}
-			if count == 0 {
-				fmt.Print(".")
-			} else {
-				fmt.Printf("%v", count)
-			}
-		}
-		fmt.Println()
-	}
-}
-
 func step(w, h int, robots []robot) {
 	for i := range robots {
 		r := &robots[i]
@@ -147,36 +126,12 @@ func step(w, h int, robots []robot) {
 	}
 }
 
-func isSimetric(w, h int, robots []robot) bool {
-	var c1, c2 int
-	for _, r := range robots {
-		if r.px < w/2 {
-			c1++
-		}
-		if r.px > w/w {
-			c2++
+func getEntropy(robots []robot) int {
+	dist := 0
+	for i, r := range robots {
+		for _, s := range robots[i+1:] {
+			dist += int(math.Abs(float64(r.px-s.px)) + math.Abs(float64(r.py-s.py)))
 		}
 	}
-	return c1 == c2
-}
-
-func countRobotsHaving2Neighbours(robots []robot) int {
-	positions := map[image.Point]bool{}
-	for _, r := range robots {
-		positions[image.Point{r.px, r.py}] = true
-	}
-	count := 0
-	for p := range positions {
-		neighbours := 0
-		for p2 := range positions {
-			d := p2.Sub(p)
-			if p != p2 && -1 <= d.X && d.X <= 1 && -1 <= d.Y && d.Y <= 1 {
-				neighbours++
-			}
-		}
-		if neighbours >= 2 {
-			count++
-		}
-	}
-	return count
+	return dist
 }
