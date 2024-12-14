@@ -37,7 +37,7 @@ func solvePuzzle2(robots []robot) int {
 	min, ind := math.MaxInt, -1
 	for i := 1; 0 <= i; i++ {
 		step(w, h, robots)
-		dist := getEntropy(robots)
+		dist := getEntropy(w, h, robots)
 		if dist < min {
 			min, ind = dist, i
 		}
@@ -126,12 +126,10 @@ func step(w, h int, robots []robot) {
 	}
 }
 
-func getEntropy(robots []robot) int {
+func getEntropy(w, h int, robots []robot) int {
 	dist := 0
-	for i, r := range robots {
-		for _, s := range robots[i+1:] {
-			dist += abs(r.px-s.px) + abs(r.py-s.py)
-		}
+	for _, r := range robots {
+		dist += abs(r.px-w/2) + abs(r.py-h/2)
 	}
 	return dist
 }
