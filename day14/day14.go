@@ -22,37 +22,16 @@ func main() {
 }
 
 func solvePuzzle1(robots []robot) int {
-	rect := getRectangle(robots)
-	fmt.Println(rect)
+	w, h := getDimension(robots)
 	for i := range robots {
-		robots[i].px, robots[i].py = getPositionAfter(robots[i], 100, rect)
+		robots[i].px, robots[i].py = getPositionAfter(robots[i], 100, w, h)
 	}
-	mx := (rect.vx - rect.px + 1) / 2
-	my := (rect.vy - rect.py + 1) / 2
-	a, b, c, d := 0, 0, 0, 0
-	for _, r := range robots {
-		if r.px < mx && r.py < my {
-			a++
-		}
-		if r.px > mx && r.py < my {
-			b++
-		}
-		if r.px < mx && r.py > my {
-			c++
-		}
-		if r.px > mx && r.py > my {
-			d++
-		}
-	}
-	fmt.Println(robots)
-	fmt.Println(a, b, c, d)
-	return a * b * c * d
+	return getSafetyFactor(w, h, robots)
 }
 
 func solvePuzzle2(robots []robot) int {
-	rect := getRectangle(robots)
-	fmt.Println(rect)
-	printRobots(rect, robots)
+	w, h := getDimension(robots)
+	printRobots(w, h, robots)
 	return 0
 }
 
@@ -75,21 +54,12 @@ func parseLine(line string) (r robot) {
 	return
 }
 
-func getRectangle(robots []robot) robot {
-	minx, miny := math.MaxInt, math.MaxInt
-	maxx, maxy := math.MinInt, math.MinInt
+func getDimension(robots []robot) (int, int) {
+	w, h := math.MinInt, math.MinInt
 	for _, r := range robots {
-		minx, miny = min(minx, r.px), min(miny, r.py)
-		maxx, maxy = max(maxx, r.px), max(maxy, r.py)
+		w, h = max(w, r.px), max(h, r.py)
 	}
-	return robot{minx, miny, maxx, maxy}
-}
-
-func min[t ~int](a, b t) t {
-	if a < b {
-		return a
-	}
-	return b
+	return w + 1, h + 1
 }
 
 func max[t ~int](a, b t) t {
@@ -99,21 +69,42 @@ func max[t ~int](a, b t) t {
 	return b
 }
 
-func getPositionAfter(r robot, round int, rect robot) (x, y int) {
-	return getCoordinateAfter(r.px, r.vx, rect.vx-rect.px+1, round),
-		getCoordinateAfter(r.py, r.vy, rect.vy-rect.py+1, round)
+func getPositionAfter(r robot, round, width, height int) (x, y int) {
+	return getCoordinateAfter(r.px, r.vx, width, round),
+		getCoordinateAfter(r.py, r.vy, height, round)
 }
 
 func getCoordinateAfter(from, speed, width, round int) int {
 	return (from + round*(speed+width)) % width
 }
 
-func printRobots(rect robot, robots []robot) {
-	for i := range rect.vx - rect.px + 1 {
-		for j := range rect.vy - rect.py + 1 {
+func getSafetyFactor(width, height int, robots []robot) int {
+	mx := width / 2
+	my := height / 2
+	a, b, c, d := 0, 0, 0, 0
+	for _, r := range robots {
+		if r.px < mx && r.py < my {
+			a++
+		}
+		if r.px > mx && r.py < my {
+			b++
+		}
+		if r.px < mx && r.py > my {
+			c++
+		}
+		if r.px > mx && r.py > my {
+			d++
+		}
+	}
+	return a * b * c * d
+}
+
+func printRobots(w, h int, robots []robot) {
+	for i := range w {
+		for j := range h {
 			count := 0
 			for _, r := range robots {
-				if r.px == rect.px+i && r.py == rect.py+j {
+				if r.px == i && r.py == j {
 					count++
 				}
 			}

@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 var testInput = `p=0,4 v=3,-3
@@ -24,21 +22,20 @@ p=9,5 v=-3,-3
 func TestGetPosition(t *testing.T) {
 	a := assert.New(t)
 
-	rect := robot{0, 0, 10, 6}
+	w, h := 11, 7
 	r := robot{2, 4, 2, -3}
 
-	x, y := getPositionAfter(r, 4, rect)
+	x, y := getPositionAfter(r, 4, w, h)
 	a.Equal(10, x)
 	a.Equal(6, y)
-	x, y = getPositionAfter(r, 5, rect)
+	x, y = getPositionAfter(r, 5, w, h)
 	a.Equal(1, x)
-	a.Equal(4, y)
+	a.Equal(3, y)
 }
 
 func TestSolution1(t *testing.T) {
 	a := assert.New(t)
 	robots := parseInput(testInput)
-	fmt.Println(robots)
 	a.Equal(12, solvePuzzle1(robots))
 }
 
