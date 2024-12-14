@@ -44,3 +44,15 @@ func TestSolution2(t *testing.T) {
 	a := assert.New(t)
 	a.Equal(0, result)
 }
+
+func TestStep(t *testing.T) {
+	a := assert.New(t)
+	robots := parseInput(testInput)
+	w, h := getDimension(robots)
+	for _ = range 100 {
+		step(w, h, robots)
+	}
+	robots2 := parseInput(testInput)
+	changePostion(w, h, robots2, 100)
+	a.Equal(robots, robots2)
+}

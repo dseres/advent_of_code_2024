@@ -5,7 +5,7 @@ import "github.com/stretchr/testify/assert"
 
 var testInput = `89010123
 78121874
-87430965
+87431065
 96549874
 45678903
 32019012
