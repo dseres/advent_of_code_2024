@@ -20,22 +20,21 @@ type robot struct {
 
 func main() {
 	robots := parseInput(input)
+	width, height := getDimension(robots)
 	robots2 := slices.Clone(robots)
-	fmt.Println("Day07 solution1:", solvePuzzle1(robots))
-	fmt.Println("Day07 solution2:", solvePuzzle2(robots2))
+	fmt.Println("Day07 solution1:", solvePuzzle1(width, height, robots))
+	fmt.Println("Day07 solution2:", solvePuzzle2(width, height, robots2))
 }
 
-func solvePuzzle1(robots []robot) int {
-	w, h := getDimension(robots)
+func solvePuzzle1(w, h int, robots []robot) int {
 	changePostion(w, h, robots, 100)
 	return getSafetyFactor(w, h, robots)
 }
 
-func solvePuzzle2(robots []robot) int {
+func solvePuzzle2(w, h int, robots []robot) int {
 	start := slices.Clone(robots)
-	w, h := getDimension(robots)
 	min, ind := math.MaxInt, -1
-	for i := 1; 0 <= i; i++ {
+	for i := 1; true; i++ {
 		step(w, h, robots)
 		dist := getEntropy(w, h, robots)
 		if dist < min {

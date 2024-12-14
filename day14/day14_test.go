@@ -36,7 +36,8 @@ func TestGetPosition(t *testing.T) {
 func TestSolution1(t *testing.T) {
 	a := assert.New(t)
 	robots := parseInput(testInput)
-	a.Equal(12, solvePuzzle1(robots))
+	w, h := getDimension(robots)
+	a.Equal(12, solvePuzzle1(w, h, robots))
 }
 
 func TestStep(t *testing.T) {
