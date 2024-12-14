@@ -130,8 +130,15 @@ func getEntropy(robots []robot) int {
 	dist := 0
 	for i, r := range robots {
 		for _, s := range robots[i+1:] {
-			dist += int(math.Abs(float64(r.px-s.px)) + math.Abs(float64(r.py-s.py)))
+			dist += abs(r.px-s.px) + abs(r.py-s.py)
 		}
 	}
 	return dist
+}
+
+func abs[T ~int](t T) T {
+	if t < 0 {
+		return -t
+	}
+	return t
 }
