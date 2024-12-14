@@ -39,17 +39,11 @@ func TestSolution1(t *testing.T) {
 	a.Equal(12, solvePuzzle1(robots))
 }
 
-func TestSolution2(t *testing.T) {
-	result := solvePuzzle2(parseInput(testInput))
-	a := assert.New(t)
-	a.Equal(0, result)
-}
-
 func TestStep(t *testing.T) {
 	a := assert.New(t)
 	robots := parseInput(testInput)
 	w, h := getDimension(robots)
-	for _ = range 100 {
+	for range 100 {
 		step(w, h, robots)
 	}
 	robots2 := parseInput(testInput)
