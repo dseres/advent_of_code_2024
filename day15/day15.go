@@ -13,10 +13,19 @@ var input string
 func main() {
 	wh := newWarehouse(input)
 	fmt.Println("Day07 solution1:", solvePuzzle1(wh))
+	wh = newWarehouse(input)
 	fmt.Println("Day07 solution2:", solvePuzzle2(wh))
 }
 
 func solvePuzzle1(wh warehouse) int {
+	fmt.Println(wh)
+	wh.execInstructions()
+	fmt.Println(wh)
+	return wh.boxSum()
+}
+
+func solvePuzzle2(wh warehouse) int {
+	wh.resize()
 	fmt.Println(wh)
 	wh.execInstructions()
 	fmt.Println()
@@ -24,15 +33,13 @@ func solvePuzzle1(wh warehouse) int {
 	return wh.boxSum()
 }
 
-func solvePuzzle2(wh warehouse) int {
-	return 0
-}
-
 const (
 	emptyByte byte = '.'
 	wallByte  byte = '#'
 	boxByte   byte = 'O'
 	robotByte byte = '@'
+	boxLeft   byte = '['
+	boxRight  byte = ']'
 
 	upByte    byte = '^'
 	rightByte byte = '>'
@@ -92,31 +99,81 @@ func (wh warehouse) String() string {
 func (wh *warehouse) execInstructions() {
 	for _, i := range wh.instructions {
 		wh.execOn(i, wh.robot)
+		// fmt.Println(wh)
 	}
 }
 
-func (wh *warehouse) execOn(i byte, p point) bool {
-	d, ok := directionMap[i]
+func (wh *warehouse) execOn(instruction byte, actualPos point) bool {
+	direction, ok := directionMap[instruction]
 	if !ok {
-		panic(fmt.Sprintf("Invalid instruction: %v", rune(i)))
+		panic(fmt.Sprintf("Invalid instruction: %v", rune(instruction)))
 	}
-	next := p.Add(d)
-	fmt.Println(string(i), p, next, string(*wh.get(next)))
-	switch *wh.get(next) {
+	nextPos := actualPos.Add(direction)
+	nextValue := *wh.get(nextPos)
+	// fmt.Println(string(instruction), actualPos, nextPos, string(nextValue))
+	switch nextValue {
 	case wallByte:
 		return false
 	case boxByte, robotByte:
-		if wh.execOn(i, next) {
-			wh.move(p, next)
+		if wh.execOn(instruction, nextPos) {
+			wh.move(actualPos, nextPos)
+			return true
+		}
+		return false
+	case boxLeft, boxRight:
+		if direction == leftPoint || direction == rightPoint {
+			if wh.execOn(instruction, nextPos) {
+				wh.move(actualPos, nextPos)
+				return true
+			}
+			return false
+		}
+		// Moving up or down, we need the other part of the box
+		if wh.canMoveUpOrDown(direction, actualPos) {
+			otherPos := wh.getOtherPosOfBox(nextPos)
+			wh.execOn(instruction, nextPos)
+			wh.execOn(instruction, otherPos)
+			wh.move(actualPos, nextPos)
 			return true
 		}
 		return false
 	case emptyByte:
-		wh.move(p, next)
+		wh.move(actualPos, nextPos)
 		return true
 	default:
-		panic(fmt.Sprintf("Invalid point in warehouse representation[%v]: %v", next, string(*wh.get(next))))
+		panic(fmt.Sprintf("Invalid point in warehouse representation[%v]: %v", nextPos, string(*wh.get(nextPos))))
 	}
+}
+
+func (wh *warehouse) canMoveUpOrDown(direction point, p point) bool {
+	if direction != upPoint && direction != downPoint {
+		panic(fmt.Sprintf("Invalid direction: %v.", direction))
+	}
+	nextPos := p.Add(direction)
+	nextValue := *wh.get(nextPos)
+	switch nextValue {
+	case wallByte:
+		return false
+	case emptyByte:
+		return true
+	case boxLeft, boxRight:
+		// If moving up or down, we need the other part of the box
+		otherPos := wh.getOtherPosOfBox(nextPos)
+		return wh.canMoveUpOrDown(direction, nextPos) && wh.canMoveUpOrDown(direction, otherPos)
+	default:
+		panic(fmt.Sprintf("Invalid point in warehouse representation[%v]: %v", nextPos, string(*wh.get(nextPos))))
+	}
+}
+
+func (wh *warehouse) getOtherPosOfBox(pos point) point {
+	value := *wh.get(pos)
+	if value == boxLeft {
+		return pos.Add(rightPoint)
+	}
+	if value == boxRight {
+		return pos.Add(leftPoint)
+	}
+	panic(fmt.Sprintf("Invalid position parameter for getOtherPartOfBox: %v", pos))
 }
 
 func (wh *warehouse) get(p point) *byte {
@@ -124,6 +181,9 @@ func (wh *warehouse) get(p point) *byte {
 }
 
 func (wh *warehouse) move(from, to point) {
+	if *wh.get(from) == emptyByte {
+		return
+	}
 	*wh.get(to) = *wh.get(from)
 	*wh.get(from) = emptyByte
 	if from == wh.robot {
@@ -135,10 +195,33 @@ func (wh *warehouse) boxSum() int {
 	sum := 0
 	for x := range wh.representation {
 		for y := range wh.representation[x] {
-			if *wh.get(point{x, y}) == boxByte {
+			p := *wh.get(point{x, y})
+			if p == boxByte || p == boxLeft {
 				sum += 100*x + y
 			}
 		}
 	}
 	return sum
+}
+
+func (wh *warehouse) resize() {
+	newRep := make([][]byte, 0, len(wh.representation))
+	for _, line := range wh.representation {
+		newLine := make([]byte, 0, 2*len(line))
+		for _, b := range line {
+			switch b {
+			case emptyByte, wallByte:
+				newLine = append(newLine, b, b)
+			case boxByte:
+				newLine = append(newLine, boxLeft, boxRight)
+			case robotByte:
+				newLine = append(newLine, robotByte, emptyByte)
+			default:
+				panic(fmt.Sprintf("Invalid point in warehouse representation: %v", string(b)))
+			}
+		}
+		newRep = append(newRep, newLine)
+	}
+	wh.robot.Y = 2 * wh.robot.Y
+	wh.representation = newRep
 }

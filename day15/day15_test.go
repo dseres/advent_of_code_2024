@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,16 +40,33 @@ var testInput2 = `########
 
 <^^>>>vv<v>>v<<`
 
+var testInput3 = `#######
+#...#.#
+#.....#
+#..OO@#
+#..O..#
+#.....#
+#######
+
+<vv<<^^<<^^`
+
 func TestSolution1(t *testing.T) {
 	a := assert.New(t)
 	wh1 := newWarehouse(testInput1)
 	wh2 := newWarehouse(testInput2)
-	a.Equal(2048, solvePuzzle1(wh2))
+	a.Equal(2028, solvePuzzle1(wh2))
 	a.Equal(10092, solvePuzzle1(wh1))
 }
 
 func TestSolution2(t *testing.T) {
-	result := solvePuzzle2(newWarehouse(testInput2))
+	wh3 := newWarehouse(testInput3)
+	wh3.resize()
+	fmt.Println(wh3)
+	wh3.execInstructions()
+	fmt.Println(wh3)
+
 	a := assert.New(t)
-	a.Equal(0, result)
+	wh1 := newWarehouse(testInput1)
+	a.Equal(9021, solvePuzzle2(wh1))
+
 }
