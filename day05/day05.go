@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -29,9 +30,17 @@ func solvePuzzle1(p *printer, rules [][]int) (sum int) {
 func solvePuzzle2(p *printer, rules [][]int) (sum int) {
 	for _, rule := range rules {
 		if !isValid(p, rule) {
-			valid, ok := p.searchForGoodOrdering(true, 0, rule)
-			if ok {
-				sum += valid[len(valid)/2]
+			slices.SortFunc(rule, func(a, b int) int {
+				if a == b {
+					return 0
+				}
+				if p.hasOrdering(a, b) {
+					return -1
+				}
+				return 1
+			})
+			if isValid(p, rule) {
+				sum += rule[len(rule)/2]
 			}
 		}
 	}
@@ -67,36 +76,6 @@ func isValid(p *printer, rule []int) (v bool) {
 				return false
 			}
 
-		}
-	}
-	return
-}
-
-func (p *printer) searchForGoodOrdering(first bool, prev int, nums []int) ([]int, bool) {
-	if len(nums) == 0 {
-		return nums, true
-	}
-	for _, n := range nums {
-		if first || p.hasOrdering(prev, n) {
-			next := pop(nums, n)
-			next, ok := p.searchForGoodOrdering(false, n, next)
-			if ok {
-				valid := make([]int, 0, len(nums))
-				valid = append(valid, n)
-				valid = append(valid, next...)
-				return valid, true
-			}
-		}
-	}
-	return []int{}, false
-}
-
-func pop(nums []int, n int) (next []int) {
-
-	next = make([]int, 0, len(nums))
-	for _, m := range nums {
-		if n != m {
-			next = append(next, m)
 		}
 	}
 	return
