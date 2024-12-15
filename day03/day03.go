@@ -16,7 +16,7 @@ func main() {
 }
 
 func solvePuzzle1(input string) (sum int64) {
-	re := regexp.MustCompile("mul\\((\\d+),(\\d+)\\)")
+	re := regexp.MustCompile(`mul\((\d+),(\d+)\)`)
 	matches := re.FindAllStringSubmatch(input, -1)
 	for _, m := range matches {
 		sum += int64(computeMul(m))
@@ -25,7 +25,7 @@ func solvePuzzle1(input string) (sum int64) {
 }
 
 func solvePuzzle2(input string) (sum int64) {
-	re := regexp.MustCompile("do\\(\\)|don't\\(\\)|mul\\((\\d+),(\\d+)\\)")
+	re := regexp.MustCompile(`do\(\)|don't\(\)|mul\((\d+),(\d+)\)`)
 	matches := re.FindAllStringSubmatch(input, -1)
 	do := true
 	for _, m := range matches {

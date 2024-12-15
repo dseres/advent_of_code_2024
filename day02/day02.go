@@ -81,7 +81,7 @@ func isIncreasing(report []int) bool {
 }
 
 func checkWithDampener(report []int, checkFun func([]int) bool) bool {
-	for i, _ := range report {
+	for i := range report {
 		dampenedReport := slices.Concat(report[:i], report[i+1:])
 		if checkFun(dampenedReport) {
 			return true

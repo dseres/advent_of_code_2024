@@ -44,7 +44,7 @@ type printer struct {
 
 func newPrinter(ordering [][]int) *printer {
 	p := printer{}
-	p.m = make([]bool, 100*100, 100*100)
+	p.m = make([]bool, 100*100)
 	for _, pair := range ordering {
 		p.addOrdering(pair[0], pair[1])
 	}

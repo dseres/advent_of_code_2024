@@ -143,7 +143,6 @@ func (g *garden) computeRegions() {
 	for _, region := range g.regions {
 		slices.SortFunc(region, comparePlotPtr)
 	}
-	return
 }
 
 func comparePlotPtr(a, b *plot) int {
@@ -159,7 +158,6 @@ func (g *garden) findPlotsInRegion(p *plot) {
 			g.findPlotsInRegion(next)
 		}
 	}
-	return
 }
 
 func (g *garden) getNext(p *plot, dir image.Point) *plot {
