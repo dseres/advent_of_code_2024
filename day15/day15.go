@@ -18,18 +18,13 @@ func main() {
 }
 
 func solvePuzzle1(wh warehouse) int {
-	fmt.Println(wh)
 	wh.execInstructions()
-	fmt.Println(wh)
 	return wh.boxSum()
 }
 
 func solvePuzzle2(wh warehouse) int {
 	wh.resize()
-	fmt.Println(wh)
 	wh.execInstructions()
-	fmt.Println()
-	fmt.Println(wh)
 	return wh.boxSum()
 }
 
@@ -55,7 +50,6 @@ var (
 	downPoint  point = point{1, 0}
 	leftPoint  point = point{0, -1}
 
-	directions   []point        = []point{upPoint, rightPoint, downPoint, leftPoint}
 	directionMap map[byte]point = map[byte]point{
 		upByte:    upPoint,
 		rightByte: rightPoint,
@@ -110,10 +104,12 @@ func (wh *warehouse) execOn(instruction byte, actualPos point) bool {
 	}
 	nextPos := actualPos.Add(direction)
 	nextValue := *wh.get(nextPos)
-	// fmt.Println(string(instruction), actualPos, nextPos, string(nextValue))
 	switch nextValue {
 	case wallByte:
 		return false
+	case emptyByte:
+		wh.move(actualPos, nextPos)
+		return true
 	case boxByte, robotByte:
 		if wh.execOn(instruction, nextPos) {
 			wh.move(actualPos, nextPos)
@@ -121,28 +117,29 @@ func (wh *warehouse) execOn(instruction byte, actualPos point) bool {
 		}
 		return false
 	case boxLeft, boxRight:
-		if direction == leftPoint || direction == rightPoint {
-			if wh.execOn(instruction, nextPos) {
-				wh.move(actualPos, nextPos)
-				return true
-			}
-			return false
-		}
-		// Moving up or down, we need the other part of the box
-		if wh.canMoveUpOrDown(direction, actualPos) {
-			otherPos := wh.getOtherPosOfBox(nextPos)
-			wh.execOn(instruction, nextPos)
-			wh.execOn(instruction, otherPos)
+		return wh.execOnSpecialBox(instruction, direction, actualPos, nextPos)
+	default:
+		panic(fmt.Sprintf("Invalid point in warehouse representation[%v]: %v", nextPos, string(*wh.get(nextPos))))
+	}
+}
+
+func (wh *warehouse) execOnSpecialBox(instruction byte, direction, actualPos, nextPos point) bool {
+	if direction == leftPoint || direction == rightPoint {
+		if wh.execOn(instruction, nextPos) {
 			wh.move(actualPos, nextPos)
 			return true
 		}
 		return false
-	case emptyByte:
+	}
+	// Moving up or down.
+	if wh.canMoveUpOrDown(direction, actualPos) {
+		otherPos := wh.getOtherPosOfBox(nextPos)
+		wh.execOn(instruction, nextPos)
+		wh.execOn(instruction, otherPos)
 		wh.move(actualPos, nextPos)
 		return true
-	default:
-		panic(fmt.Sprintf("Invalid point in warehouse representation[%v]: %v", nextPos, string(*wh.get(nextPos))))
 	}
+	return false
 }
 
 func (wh *warehouse) canMoveUpOrDown(direction point, p point) bool {

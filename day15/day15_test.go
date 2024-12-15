@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 var testInput1 = `##########
@@ -59,13 +57,13 @@ func TestSolution1(t *testing.T) {
 }
 
 func TestSolution2(t *testing.T) {
+	a := assert.New(t)
+
 	wh3 := newWarehouse(testInput3)
 	wh3.resize()
-	fmt.Println(wh3)
 	wh3.execInstructions()
-	fmt.Println(wh3)
+	a.Equal(105+207+306, wh3.boxSum())
 
-	a := assert.New(t)
 	wh1 := newWarehouse(testInput1)
 	a.Equal(9021, solvePuzzle2(wh1))
 
