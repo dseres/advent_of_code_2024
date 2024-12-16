@@ -65,7 +65,6 @@ func solvePuzzle(maze [][]byte) (int, int) {
 	dijkstra(maze, visited, reachables)
 	min, endNodes := minDist(visited, ep)
 	count := countRoutes(visited, map[point]bool{}, endNodes)
-	fmt.Println(min, count)
 	return min, count
 }
 
@@ -109,13 +108,8 @@ func addReachableNodes(maze [][]byte, visited map[node]value, reachables map[nod
 func addReachable(maze [][]byte, visited map[node]value, reachables map[node]value, from, to node, dist int) {
 	if b := maze[to.position.X][to.position.Y]; b != wallByte {
 		dist = visited[from].distance + dist
-		v, ok := visited[to]
+		_, ok := visited[to]
 		if ok {
-			// The reindeer reached a point from a different direction with the same distance
-			if v.distance == dist {
-				v.prevs = append(v.prevs, from)
-				fmt.Println("Visited: ", v)
-			}
 			return
 		}
 		r, ok := reachables[to]
