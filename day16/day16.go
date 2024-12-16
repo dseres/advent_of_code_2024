@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"image"
 	"math"
+	_ "slices"
 )
 
 //go:embed input16.txt
@@ -13,8 +14,9 @@ var input string
 
 func main() {
 	maze := parseInput(input)
-	fmt.Println("Day07 solution1:", solvePuzzle1(maze))
-	fmt.Println("Day07 solution2:", solvePuzzle2(maze))
+	dist, count := solvePuzzle(maze)
+	fmt.Println("Day07 solution1:", dist)
+	fmt.Println("Day07 solution2:", count)
 }
 
 func parseInput(input string) [][]byte {
@@ -43,62 +45,112 @@ var (
 )
 
 type node struct {
-	position            point
-	direction, distance int
+	position  point
+	direction int
 }
 
-func solvePuzzle1(maze [][]byte) int {
-	// TODO: write a Dijkstra algorythm
-	//  * find reachable points
-	n := node{startPoint(maze), toTheRight, 0}
-	// fmt.Println(n)
-	reachables := map[point]node{}
-	visited := map[point]int{n.position: n.distance}
-	for {
-		addReachableNodes(maze, visited, n, &reachables)
-		n.distance = math.MaxInt
-		for _, r := range reachables {
-			if r.distance < n.distance {
-				n = r
-			}
-		}
-		// fmt.Println(n, reachables, visited)
-		visited[n.position] = n.distance
-		delete(reachables, n.position)
-		if maze[n.position.X][n.position.Y] == endByte {
-			return n.distance
-		}
-	}
+type value struct {
+	distance int
+	prevs    []node
 }
 
-func solvePuzzle2(maze [][]byte) int {
-	return 0
+func solvePuzzle(maze [][]byte) (int, int) {
+	// It is a dijkstra algorythm, x,y,direction represents a node
+	sp, ep := startEndPoint(maze)
+	sk := node{sp, toTheRight}
+	sv := value{0, []node{}}
+	reachables := map[node]value{}
+	visited := map[node]value{sk: sv}
+	addReachableNodes(maze, visited, reachables, sk)
+	dijkstra(maze, visited, reachables)
+	min, endNodes := minDist(visited, ep)
+	count := countRoutes(visited, map[point]bool{}, endNodes)
+	fmt.Println(min, count)
+	return min, count
 }
 
-func startPoint(maze [][]byte) point {
+func startEndPoint(maze [][]byte) (point, point) {
+	sp, ep := point{}, point{}
 	for x, l := range maze {
 		for y, b := range l {
 			if b == startByte {
-				return point{x, y}
+				sp = point{x, y}
+			}
+			if b == endByte {
+				ep = point{x, y}
 			}
 		}
 	}
-	panic("Maze doesn't have a start point.")
+	return sp, ep
 }
 
-func addReachableNodes(maze [][]byte, visited map[point]int, n node, reachables *map[point]node) {
-	addReachable(maze, visited, n, 0, 1, reachables)
-	addReachable(maze, visited, n, toTheRight, 1001, reachables)
-	addReachable(maze, visited, n, toTheLeft, 1001, reachables)
+func dijkstra(maze [][]byte, visited map[node]value, reachables map[node]value) {
+	for len(reachables) > 0 {
+		dist := math.MaxInt
+		n := node{}
+		for k, v := range reachables {
+			if v.distance < dist {
+				dist = v.distance
+				n = k
+			}
+		}
+		visited[n] = reachables[n]
+		delete(reachables, n)
+		addReachableNodes(maze, visited, reachables, n)
+	}
 }
 
-func addReachable(maze [][]byte, visited map[point]int, n node, dir, dist int, reachables *map[point]node) {
-	nextDir := (n.direction + dir) % 4
-	nextPos := n.position.Add(dirPoints[nextDir])
-	value := maze[nextPos.X][nextPos.Y]
-	if value != wallByte {
-		if _, ok := visited[nextPos]; !ok {
-			(*reachables)[nextPos] = node{nextPos, nextDir, n.distance + dist}
+func addReachableNodes(maze [][]byte, visited map[node]value, reachables map[node]value, from node) {
+	addReachable(maze, visited, reachables, from, node{from.position.Add(dirPoints[from.direction]), from.direction}, 1)
+	addReachable(maze, visited, reachables, from, node{from.position, (from.direction + toTheLeft) % 4}, 1000)
+	addReachable(maze, visited, reachables, from, node{from.position, (from.direction + toTheRight) % 4}, 1000)
+}
+
+func addReachable(maze [][]byte, visited map[node]value, reachables map[node]value, from, to node, dist int) {
+	if b := maze[to.position.X][to.position.Y]; b != wallByte {
+		dist = visited[from].distance + dist
+		v, ok := visited[to]
+		if ok {
+			// The reindeer reached a point from a different direction with the same distance
+			if v.distance == dist {
+				v.prevs = append(v.prevs, from)
+				fmt.Println("Visited: ", v)
+			}
+			return
+		}
+		r, ok := reachables[to]
+		if ok {
+			if dist < r.distance {
+				reachables[to] = value{dist, []node{from}}
+			}
+			if dist == r.distance {
+				r.prevs = append(r.prevs, from)
+				reachables[to] = r
+			}
+		} else {
+			reachables[to] = value{dist, []node{from}}
 		}
 	}
+}
+
+func minDist(visited map[node]value, ep point) (int, []node) {
+	min, nodes := math.MaxInt, []node{}
+	for i := 0; i < 4; i++ {
+		v, ok := visited[node{ep, i}]
+		if ok && v.distance < min {
+			min = v.distance
+			nodes = append(nodes, node{ep, i})
+		}
+	}
+	return min, nodes
+}
+
+func countRoutes(visited map[node]value, path map[point]bool, from []node) int {
+	// fmt.Println(from)
+	for _, k := range from {
+		path[k.position] = true
+		countRoutes(visited, path, visited[k].prevs)
+
+	}
+	return len(path)
 }

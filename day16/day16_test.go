@@ -39,12 +39,12 @@ var testInput2 = `#################
 
 func TestSolution1(t *testing.T) {
 	a := assert.New(t)
-	a.Equal(7036, solvePuzzle1(parseInput(testInput1)))
-	a.Equal(11048, solvePuzzle1(parseInput(testInput2)))
-}
 
-func TestSolution2(t *testing.T) {
-	result := solvePuzzle2(parseInput(testInput1))
-	a := assert.New(t)
-	a.Equal(0, result)
+	dist, count := 0, 0
+	dist, count = solvePuzzle(parseInput(testInput1))
+	a.Equal(7036, dist)
+	a.Equal(45, count)
+	dist, count = solvePuzzle(parseInput(testInput2))
+	a.Equal(11048, dist)
+	a.Equal(64, count)
 }
