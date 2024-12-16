@@ -108,12 +108,10 @@ func addReachableNodes(maze [][]byte, visited map[node]value, reachables map[nod
 func addReachable(maze [][]byte, visited map[node]value, reachables map[node]value, from, to node, dist int) {
 	if b := maze[to.position.X][to.position.Y]; b != wallByte {
 		dist = visited[from].distance + dist
-		_, ok := visited[to]
-		if ok {
+		if _, ok := visited[to]; ok {
 			return
 		}
-		r, ok := reachables[to]
-		if ok {
+		if r, ok := reachables[to]; ok {
 			if dist < r.distance {
 				reachables[to] = value{dist, []node{from}}
 			}
@@ -121,9 +119,9 @@ func addReachable(maze [][]byte, visited map[node]value, reachables map[node]val
 				r.prevs = append(r.prevs, from)
 				reachables[to] = r
 			}
-		} else {
-			reachables[to] = value{dist, []node{from}}
+			return
 		}
+		reachables[to] = value{dist, []node{from}}
 	}
 }
 
