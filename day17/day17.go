@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -14,7 +15,7 @@ var input string
 func main() {
 	m := new(input)
 	fmt.Println("Day07 solution1:", solvePuzzle1(m))
-	fmt.Println("Day07 solution2:", solvePuzzle2(m))
+	fmt.Println("Day07 solution2:", solvePuzzle2(m.instructions))
 }
 
 func solvePuzzle1(m machine) string {
@@ -26,8 +27,48 @@ func solvePuzzle1(m machine) string {
 	return strings.Join(output, ",")
 }
 
-func solvePuzzle2(m machine) int {
-	return 0
+func solvePuzzle2(needle []int) int {
+	nums := search(needle, 0, 0)
+	fmt.Println(nums)
+	return slices.Min(nums)
+}
+
+func search(needle []int, ind, prefix int) (found []int) {
+	from := prefix << 3
+	offset := len(needle) - 1 - ind
+	fmt.Println("From:", from, offset)
+	s := make([]int, 0, len(needle))
+	for i := from; i < from+8; i++ {
+		serie(i, &s)
+		fmt.Println(i, s, needle[offset:])
+		if slices.Compare(s, needle[offset:]) == 0 {
+			fmt.Println("Found: ", needle, i, s)
+			if offset == 0 {
+				found = append(found, i)
+				continue
+			}
+			// search in one more deeper
+			found = append(found, search(needle, ind+1, i)...)
+		}
+	}
+	return
+}
+
+func serie(a int, s *[]int) {
+	*s = (*s)[:0]
+	for {
+		// fmt.Printf("%x", a)
+		b := (a & 7) ^ 1
+		c := a >> b
+		// fmt.Printf(" %x %x", b, c)
+		b = (b ^ 5) ^ (c & 7)
+		a = a >> 3
+		// fmt.Printf(" %x %x\n", b, a)
+		*s = append(*s, b&7)
+		if a == 0 {
+			break
+		}
+	}
 }
 
 type machine struct {
