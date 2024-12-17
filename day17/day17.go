@@ -15,11 +15,11 @@ var input string
 func main() {
 	m := new(input)
 	fmt.Println("Day07 solution1:", solvePuzzle1(m))
-	fmt.Println("Day07 solution2:", solvePuzzle2(m.instructions))
+	fmt.Println("Day07 solution2:", solvePuzzle2(m))
 }
 
 func solvePuzzle1(m machine) string {
-	m.run()
+	m.run(m.a)
 	output := make([]string, 0, len(m.output))
 	for _, v := range m.output {
 		output = append(output, strconv.Itoa(v))
@@ -27,48 +27,27 @@ func solvePuzzle1(m machine) string {
 	return strings.Join(output, ",")
 }
 
-func solvePuzzle2(needle []int) int {
-	nums := search(needle, 0, 0)
-	fmt.Println(nums)
+func solvePuzzle2(m machine) int {
+	nums := search(m, 0, 0)
 	return slices.Min(nums)
 }
 
-func search(needle []int, ind, prefix int) (found []int) {
+func search(m machine, ind, prefix int) (nums []int) {
 	from := prefix << 3
-	offset := len(needle) - 1 - ind
-	fmt.Println("From:", from, offset)
-	s := make([]int, 0, len(needle))
+	offset := len(m.instructions) - 1 - ind
 	for i := from; i < from+8; i++ {
-		serie(i, &s)
-		fmt.Println(i, s, needle[offset:])
-		if slices.Compare(s, needle[offset:]) == 0 {
-			fmt.Println("Found: ", needle, i, s)
+		output := m.run(i)
+		if slices.Compare(output, m.instructions[offset:]) == 0 {
 			if offset == 0 {
-				found = append(found, i)
+				// we reached the end
+				nums = append(nums, i)
 				continue
 			}
 			// search in one more deeper
-			found = append(found, search(needle, ind+1, i)...)
+			nums = append(nums, search(m, ind+1, i)...)
 		}
 	}
 	return
-}
-
-func serie(a int, s *[]int) {
-	*s = (*s)[:0]
-	for {
-		// fmt.Printf("%x", a)
-		b := (a & 7) ^ 1
-		c := a >> b
-		// fmt.Printf(" %x %x", b, c)
-		b = (b ^ 5) ^ (c & 7)
-		a = a >> 3
-		// fmt.Printf(" %x %x\n", b, a)
-		*s = append(*s, b&7)
-		if a == 0 {
-			break
-		}
-	}
 }
 
 type machine struct {
@@ -88,7 +67,7 @@ func new(input string) machine {
 		i, _ := strconv.Atoi(s)
 		instructions = append(instructions, i)
 	}
-	return machine{a: a, b: b, c: c, instructions: instructions, ip: 0, output: []int{}}
+	return machine{a: a, b: b, c: c, instructions: instructions, ip: 0, output: make([]int, 0, len(instructions))}
 }
 
 func (m *machine) combo(i int) int {
@@ -171,14 +150,19 @@ func (i cdv) compute(m *machine, op int, combo int) {
 	m.ip += 2
 }
 
-func (m *machine) run() {
-	operations := []computer{adv{}, bxl{}, bst{}, jnz{}, bxc{}, out{}, bdv{}, cdv{}}
+var operations []computer = []computer{adv{}, bxl{}, bst{}, jnz{}, bxc{}, out{}, bdv{}, cdv{}}
+
+func (m *machine) run(a int) []int {
+	m.a = a
+	// Erease the output buffer
+	m.output = m.output[:0]
+	// set instruction pointer to the beginning
+	m.ip = 0
 	for m.ip < len(m.instructions) {
 		instruction := m.instructions[m.ip]
 		operation := operations[instruction]
 		operand := m.instructions[m.ip+1]
-		// fmt.Printf("IP: %v, operation: %T %v, operand: %v, combo: %v\n", m.ip, operation, operation, operand, m.combo(operand))
 		operation.compute(m, operand, m.combo(operand))
-		// fmt.Println(m)
 	}
+	return m.output
 }
