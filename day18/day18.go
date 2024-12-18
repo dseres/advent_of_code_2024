@@ -15,20 +15,7 @@ var input string
 func main() {
 	m := new(input, 70, 1024)
 	fmt.Println("Day07 solution1:", m.findPath())
-	fmt.Println("Day07 solution2:", solvePuzzle2(m))
-}
-
-// Brute force
-func solvePuzzle2(m maze) int {
-	for i := 1024; true; i++ {
-		m := new(input, 70, i)
-		dist := m.findPath()
-		if dist == 0 {
-			fmt.Println(strings.Split(input, "\n")[i-1])
-			break
-		}
-	}
-	return 0
+	fmt.Println("Day07 solution2:", m.addMoreBarriers())
 }
 
 type point = image.Point
@@ -42,40 +29,45 @@ type maze struct {
 	barriers           map[point]bool
 	start, end         point
 	visited, reachable map[point]node
+	allBarriers        []point
 }
 
 func new(input string, size, count int) (m maze) {
-	m.barriers = make(map[image.Point]bool)
-	m.visited = make(map[image.Point]node)
-	m.reachable = make(map[image.Point]node)
-	for i, line := range strings.Split(input, "\n") {
+	for _, line := range strings.Split(input, "\n") {
 		if len(line) == 0 {
 			continue
 		}
-		if i >= count {
-			break
-		}
-		parts := strings.Split(line, ",")
-		x, err := strconv.Atoi(parts[0])
-		if err != nil {
-			panic("Bad number")
-		}
-		y, err := strconv.Atoi(parts[1])
-		if err != nil {
-			panic("Bad number")
-		}
-		m.barriers[point{x, y}] = true
+		m.allBarriers = append(m.allBarriers, parseLine(line))
+	}
+	m.barriers = make(map[image.Point]bool)
+	m.visited = make(map[image.Point]node)
+	m.reachable = make(map[image.Point]node)
+	for _, b := range m.allBarriers[:count] {
+		m.barriers[b] = true
 	}
 	m.start = point{0, 0}
 	m.end = point{size, size}
 	return
 }
 
+func parseLine(line string) point {
+	parts := strings.Split(line, ",")
+	x, err := strconv.Atoi(parts[0])
+	if err != nil {
+		panic("Bad number")
+	}
+	y, err := strconv.Atoi(parts[1])
+	if err != nil {
+		panic("Bad number")
+	}
+	return point{x, y}
+}
+
 func (m maze) String() string {
 	size := m.end.X + 1
 	buff := make([]byte, size*(size+1))
 	l := 0
-	for _ = range size {
+	for range size {
 		for j := range size + 1 {
 			buff[l+j] = '.'
 		}
@@ -124,7 +116,7 @@ func (m maze) checkNeigbours(p point) {
 		if _, ok := m.barriers[next]; ok {
 			continue
 		}
-		// It is visted
+		// It is visited
 		if _, ok := m.visited[next]; ok {
 			continue
 		}
@@ -138,4 +130,44 @@ func (m maze) checkNeigbours(p point) {
 		}
 	}
 
+}
+
+func (m maze) addMoreBarriers() string {
+	for i := len(m.barriers); i < len(m.allBarriers); i++ {
+		m.addBarrier(i)
+		if !m.checkRoute(m.end) {
+			dist := m.reCalculate()
+			if dist == 0 {
+				bad := m.allBarriers[i]
+				return fmt.Sprintf("%v,%v", bad.X, bad.Y)
+			}
+		}
+	}
+	panic("Route cannot be broken!")
+}
+
+func (m maze) addBarrier(i int) {
+	barrier := m.allBarriers[i]
+	m.barriers[barrier] = true
+	delete(m.visited, barrier)
+}
+
+func (m maze) checkRoute(p point) bool {
+	if p == m.start {
+		return true
+	}
+	if node, ok := m.visited[p]; ok {
+		for _, next := range node.prev {
+			if m.checkRoute(next) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (m maze) reCalculate() int {
+	m.visited = map[image.Point]node{}
+	m.reachable = map[image.Point]node{}
+	return m.findPath()
 }

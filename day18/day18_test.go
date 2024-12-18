@@ -38,11 +38,5 @@ func TestSolution1(t *testing.T) {
 	m := new(testInput, 6, 12)
 	fmt.Println(m)
 	a.Equal(22, m.findPath())
-}
-
-func TestSolution2(t *testing.T) {
-	a := assert.New(t)
-	m := new(testInput, 6, 12)
-	fmt.Println(m)
-	a.Equal(0, solvePuzzle2(m))
+	a.Equal("6,1", m.addMoreBarriers())
 }
