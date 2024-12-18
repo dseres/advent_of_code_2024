@@ -30,6 +30,7 @@ type maze struct {
 	start, end         point
 	visited, reachable map[point]node
 	allBarriers        []point
+	route              map[point]bool
 }
 
 func new(input string, size, count int) (m maze) {
@@ -133,40 +134,65 @@ func (m maze) checkNeigbours(p point) {
 }
 
 func (m maze) addMoreBarriers() string {
+	m.computeRoute()
 	for i := len(m.barriers); i < len(m.allBarriers); i++ {
 		m.addBarrier(i)
-		if !m.checkRoute(m.end) {
+		if !m.onRoute(i) {
+			continue
+		}
+		if !m.hasRoute(m.end) {
 			dist := m.reCalculate()
 			if dist == 0 {
 				bad := m.allBarriers[i]
 				return fmt.Sprintf("%v,%v", bad.X, bad.Y)
 			}
+			m.computeRoute()
 		}
 	}
 	panic("Route cannot be broken!")
 }
 
-func (m maze) addBarrier(i int) {
+func (m *maze) computeRoute() {
+	m.route = map[image.Point]bool{}
+	m.computeRouteImpl(m.end)
+}
+
+func (m *maze) computeRouteImpl(p point) {
+	m.route[p] = true
+	for _, prev := range m.visited[p].prev {
+		m.computeRouteImpl(prev)
+	}
+}
+
+func (m *maze) onRoute(i int) bool {
+	_, ok := m.route[m.allBarriers[i]]
+	return ok
+}
+
+func (m *maze) addBarrier(i int) {
 	barrier := m.allBarriers[i]
 	m.barriers[barrier] = true
 	delete(m.visited, barrier)
 }
 
-func (m maze) checkRoute(p point) bool {
+func (m *maze) hasRoute(p point) bool {
 	if p == m.start {
 		return true
 	}
 	if node, ok := m.visited[p]; ok {
-		for _, next := range node.prev {
-			if m.checkRoute(next) {
+		for i, next := range node.prev {
+			if m.hasRoute(next) {
 				return true
 			}
+			// previous nodes are bad, we can remove this connection
+			node.prev = node.prev[i:]
+			m.visited[p] = node
 		}
 	}
 	return false
 }
 
-func (m maze) reCalculate() int {
+func (m *maze) reCalculate() int {
 	m.visited = map[image.Point]node{}
 	m.reachable = map[image.Point]node{}
 	return m.findPath()

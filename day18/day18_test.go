@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 var testInput = `5,4
@@ -36,7 +34,6 @@ var testInput = `5,4
 func TestSolution1(t *testing.T) {
 	a := assert.New(t)
 	m := new(testInput, 6, 12)
-	fmt.Println(m)
 	a.Equal(22, m.findPath())
 	a.Equal("6,1", m.addMoreBarriers())
 }
