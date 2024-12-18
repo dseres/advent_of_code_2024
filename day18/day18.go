@@ -18,31 +18,17 @@ func main() {
 	fmt.Println("Day07 solution2:", solvePuzzle2(m))
 }
 
+// Brute force
 func solvePuzzle2(m maze) int {
+	for i := 1024; true; i++ {
+		m := new(input, 70, i)
+		dist := m.findPath()
+		if dist == 0 {
+			fmt.Println(strings.Split(input, "\n")[i-1])
+			break
+		}
+	}
 	return 0
-}
-
-func parseInput(input string) (parsed [][]int) {
-	lines := strings.Split(input, "\n")
-	for _, line := range lines {
-		if len(line) > 0 {
-			report := parseLine(line)
-			parsed = append(parsed, report)
-		}
-	}
-	return
-}
-
-func parseLine(line string) (nums []int) {
-	fields := strings.Fields(line)
-	for _, field := range fields {
-		val, err := strconv.Atoi(field)
-		if err != nil {
-			panic(err)
-		}
-		nums = append(nums, val)
-	}
-	return
 }
 
 type point = image.Point
