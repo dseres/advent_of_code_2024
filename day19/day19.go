@@ -1,46 +1,38 @@
 package main
 
-import "fmt"
-import _ "embed"
-import "strings"
-import "strconv"
+import (
+	_ "embed"
+	"fmt"
+	"regexp"
+	"strings"
+)
 
 //go:embed input19.txt
 var input string
 
 func main() {
-	nums := parseInput(input)
-	fmt.Println("Day07 solution1:", solvePuzzle1(nums))
-	fmt.Println("Day07 solution2:", solvePuzzle2(nums))
+	patterns, strs := parseInput(input)
+	fmt.Println(patterns, strs)
+	fmt.Println("Day07 solution1:", solvePuzzle1(patterns, strs))
+	fmt.Println("Day07 solution2:", solvePuzzle2(patterns, strs))
 }
 
-func solvePuzzle1(nums [][]int) int {
+func solvePuzzle1(patterns []string, strs []string) int {
+	count := 0
+	re := regexp.MustCompile("^(" + strings.Join(patterns, "|") + ")*$")
+	for _, str := range strs {
+		if re.MatchString(str) {
+			count++
+		}
+	}
+	return count
+}
+
+func solvePuzzle2(patterns []string, strs []string) int {
 	return 0
 }
 
-func solvePuzzle2(nums [][]int) int {
-	return 0
-}
-
-func parseInput(input string) (parsed [][]int) {
-	lines := strings.Split(input, "\n")
-	for _, line := range lines {
-		if len(line) > 0 {
-			report := parseLine(line)
-			parsed = append(parsed, report)
-		}
-	}
-	return
-}
-
-func parseLine(line string) (nums []int) {
-	fields := strings.Fields(line)
-	for _, field := range fields {
-		val, err := strconv.Atoi(field)
-		if err != nil {
-			panic(err)
-		}
-		nums = append(nums, val)
-	}
-	return
+func parseInput(input string) ([]string, []string) {
+	parts := strings.Split(strings.TrimRight(input, " \t\r\n"), "\n\n")
+	return strings.Split(parts[0], ", "), strings.Split(parts[1], "\n")
 }
