@@ -15,19 +15,9 @@ var input string
 
 func main() {
 	m := new(input)
-	fmt.Println("Day07 solution1:", solvePuzzle1(m, 100))
-	fmt.Println("Day07 solution2:", solvePuzzle2(m))
-}
-
-func solvePuzzle1(m maze, length int) int {
 	m.findPath()
-	fmt.Println(m)
-	fmt.Println("Route length: ", len(m.route))
-	return m.countShortcuts(length)
-}
-
-func solvePuzzle2(m maze) int {
-	return 0
+	fmt.Println("Day07 solution1:", m.countShortcuts(100, 2))
+	fmt.Println("Day07 solution2:", m.countShortcuts(100, 20))
 }
 
 const (
@@ -166,30 +156,29 @@ func (m maze) checkNeigbours(p point) {
 
 }
 
-func (m maze) shortcut(a, b point) bool {
-	d := a.Sub(b)
-	if d.X == 0 && (d.Y == 2 || d.Y == -2) || (d.X == 2 || d.X == -2) && d.Y == 0 {
-		c := a.Add(b).Div(2)
-		if m.tiles[c.X][c.Y] == wall {
-			return true
-		}
-	}
-	return false
-}
-
-func (m maze) countShortcuts(length int) int {
+func (m maze) countShortcuts(length, jumps int) int {
 	count := 0
 	for i, p1 := range m.route {
 		for j, p2 := range m.route[i+1:] {
-			// fmt.Println(i, j, p1, p2)
 			// You can shortcut route here
-			if m.shortcut(p1, p2) {
-				// fmt.Println("Shortcut: ", p1, " - ", p2, " len(", i, ",", j, "): ", j-1)
-				if length <= j-1 {
-					count++
-				}
+			dist := distance(p1, p2)
+			if dist <= jumps && j+1-dist >= length {
+				// This is a shortcut
+				count++
 			}
 		}
 	}
 	return count
+}
+
+func distance(a, b point) int {
+	d := a.Sub(b)
+	return abs(d.X) + abs(d.Y)
+}
+
+func abs(a int) int {
+	if a < 0 {
+		return -a
+	}
+	return a
 }
