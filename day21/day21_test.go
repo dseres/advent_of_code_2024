@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"slices"
 	"testing"
 
@@ -37,29 +36,32 @@ func TestToNum(t *testing.T) {
 	a.Equal([]byte("456A"), toNums([]byte("<v<A>>^AA<vA<A>>^AAvAA<^A>A<vA>^A<A>A<vA>^A<A>A<v<A>A>^AAvA<^A>A"), 2))
 	a.Equal([]byte("379A"), toNums([]byte("<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A"), 2))
 
+	a.Equal([]byte("029A"), toNums([]byte("v<A<AA>^>AvA^<Av>A^Av<<A>^>AvA^Av<<A>^>AAv<A>A^A<A>Av<A<A>^>AAA<Av>A^A"), 2))
 }
 
 func TestRoutes(t *testing.T) {
 	a := assert.New(t)
 	routesFromA := searchRoutesFrom(numPad, slices.Index(numPad, 'A'))
-	fmt.Println(routesFromA)
 	a.Equal(4, len(routesFromA[56].positions))
 	a.Equal(9, len(routesFromA[55].positions))
 
-	numRoutes := getRoutes(numPad)
 	printRoutes(numRoutes)
-	dirRoutes := getRoutes(dirPad)
 	printRoutes(dirRoutes)
+}
+
+func TestConvert(t *testing.T) {
+	a := assert.New(t)
+	a.Equal(68, convert([]byte("029A"), 'A', 0, 2, []byte{}))
 }
 
 func TestSolution1(t *testing.T) {
 	result := solvePuzzle1(parseInput(testInput))
 	a := assert.New(t)
-	a.Equal(0 /*126384*/, result)
+	a.Equal(126384, result)
 }
 
-func TestSolution2(t *testing.T) {
-	result := solvePuzzle2(parseInput(testInput))
-	a := assert.New(t)
-	a.Equal(0, result)
-}
+// func TestSolution2(t *testing.T) {
+// 	result := solvePuzzle2(parseInput(testInput))
+// 	a := assert.New(t)
+// 	a.Equal(0, result)
+// }

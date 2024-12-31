@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -13,6 +14,8 @@ var input string
 
 var numPad []byte = []byte("789456123X0A")
 var dirPad []byte = []byte("X^A<v>")
+var numRoutes map[byte]map[byte]routes = getRoutes(numPad)
+var dirRoutes map[byte]map[byte]routes = getRoutes(dirPad)
 
 func main() {
 	codes := parseInput(input)
@@ -22,7 +25,11 @@ func main() {
 }
 
 func solvePuzzle1(codes []string) int {
-	return 0
+	sum := 0
+	for _, code := range codes {
+		sum += numOf(code) * convert([]byte(code), 'A', 0, 2, []byte{})
+	}
+	return sum
 }
 
 func solvePuzzle2(codes []string) int {
@@ -30,7 +37,7 @@ func solvePuzzle2(codes []string) int {
 }
 
 func parseInput(input string) (parsed []string) {
-	return strings.Split(input, "\n")
+	return strings.Split(strings.TrimSpace(input), "\n")
 }
 
 func toNums(input []byte, level int) []byte {
@@ -195,5 +202,53 @@ func printRoutes(all map[byte]map[byte]routes) {
 			fmt.Printf("]\n")
 		}
 	}
+}
 
+func numOf(code string) int {
+	n, err := strconv.Atoi(code[:len(code)-1])
+	if err != nil {
+		panic(fmt.Sprintf("Bad number format in code %v", code))
+	}
+	return n
+}
+
+var cache map[string]int = make(map[string]int)
+
+func convert(code []byte, from byte, level, maxLevel int, prev []byte) int {
+	// fmt.Println(len(code), string(code), string(rune(from)), level, maxLevel, string(prev))
+	if level > maxLevel {
+		return len(code)
+	}
+	if len(code) == 0 {
+		return convert(prev, 'A', level+1, maxLevel, []byte{})
+	}
+	// // Checking cache
+	// k := string(code)
+	// if level == maxLevel {
+	// 	if val, ok := cache[k]; ok {
+	// 		return val
+	// 	}
+	// }
+	to := byte(code[0])
+	routes := dirRoutes
+	if level == 0 {
+		routes = numRoutes
+	}
+	minLength := math.MaxInt
+	for _, r := range routes[from][to].positions {
+		next := slices.Clone(prev)
+		for _, c := range r {
+			next = append(next, byte(c))
+		}
+		length := convert(code[1:], to, level, maxLevel, next)
+		if length < minLength {
+			minLength = length
+		}
+	}
+	// //caching
+	// if level == maxLevel {
+	// 	cache[k] = minLength
+	// 	fmt.Println("caching", k, minLength)
+	// }
+	return minLength
 }
