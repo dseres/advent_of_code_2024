@@ -24,26 +24,26 @@ var testInput = `029A
 func TestToNum(t *testing.T) {
 	a := assert.New(t)
 
-	a.Equal([]byte("029A"), toNums([]byte("<A^A>^^AvvvA"), 0))
-	a.Equal([]byte("029A"), toNums([]byte("<A^A^>^AvvvA"), 0))
-	a.Equal([]byte("029A"), toNums([]byte("<A^A^^>AvvvA"), 0))
+	a.Equal("029A", toNums("<A^A>^^AvvvA", 0))
+	a.Equal("029A", toNums("<A^A^>^AvvvA", 0))
+	a.Equal("029A", toNums("<A^A^^>AvvvA", 0))
 
-	a.Equal([]byte("029A"), toNums([]byte("v<<A>>^A<A>AvA<^AA>A<vAAA>^A"), 1))
+	a.Equal("029A", toNums("v<<A>>^A<A>AvA<^AA>A<vAAA>^A", 1))
 
-	a.Equal([]byte("029A"), toNums([]byte("<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A"), 2))
-	a.Equal([]byte("980A"), toNums([]byte("<v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A"), 2))
-	a.Equal([]byte("179A"), toNums([]byte("<v<A>>^A<vA<A>>^AAvAA<^A>A<v<A>>^AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A"), 2))
-	a.Equal([]byte("456A"), toNums([]byte("<v<A>>^AA<vA<A>>^AAvAA<^A>A<vA>^A<A>A<vA>^A<A>A<v<A>A>^AAvA<^A>A"), 2))
-	a.Equal([]byte("379A"), toNums([]byte("<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A"), 2))
+	a.Equal("029A", toNums("<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A", 2))
+	a.Equal("980A", toNums("<v<A>>^AAAvA^A<vA<AA>>^AvAA<^A>A<v<A>A>^AAAvA<^A>A<vA>^A<A>A", 2))
+	a.Equal("179A", toNums("<v<A>>^A<vA<A>>^AAvAA<^A>A<v<A>>^AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A", 2))
+	a.Equal("456A", toNums("<v<A>>^AA<vA<A>>^AAvAA<^A>A<vA>^A<A>A<vA>^A<A>A<v<A>A>^AAvA<^A>A", 2))
+	a.Equal("379A", toNums("<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A", 2))
 
-	a.Equal([]byte("029A"), toNums([]byte("v<A<AA>^>AvA^<Av>A^Av<<A>^>AvA^Av<<A>^>AAv<A>A^A<A>Av<A<A>^>AAA<Av>A^A"), 2))
+	a.Equal("029A", toNums("v<A<AA>^>AvA^<Av>A^Av<<A>^>AvA^Av<<A>^>AAv<A>A^A<A>Av<A<A>^>AAA<Av>A^A", 2))
 }
 
 func TestRoutes(t *testing.T) {
 	a := assert.New(t)
 	routesFromA := searchRoutesFrom(numPad, slices.Index(numPad, 'A'))
-	a.Equal(4, len(routesFromA[56]))
-	a.Equal(9, len(routesFromA[55]))
+	a.Equal(2, len(routesFromA['5']))
+	a.Equal(1, len(routesFromA['7']))
 
 	printRoutes(numRoutes)
 	printRoutes(dirRoutes)
@@ -51,25 +51,11 @@ func TestRoutes(t *testing.T) {
 
 func TestConvert(t *testing.T) {
 	a := assert.New(t)
-	a.Equal(68, convert("029A", "", 'A', 0, 2))
+	a.Equal(68, convert("A029A", "", 0, 2))
 }
 
-// func TestConvertWithLevels(t *testing.T) {
-// 	a := assert.New(t)
-
-// 	a.Equal(3, len(convertOneLevel("029A", 'A', 0)))
-// 	a.Equal(3, len(convertWithLevels("029A", 0)))
-
-// 	a.Equal(68, getMin("029A", 2))
-// 	a.Equal(60, getMin("980A", 2))
-// 	a.Equal(68, getMin("179A", 2))
-// 	a.Equal(64, getMin("456A", 2))
-// 	a.Equal(64, getMin("379A", 2))
-// }
-
 func TestSolution1(t *testing.T) {
-	result := solvePuzzle1(parseInput(testInput))
 	a := assert.New(t)
-	a.Equal(126384, result)
-	a.Equal(248684, solvePuzzle1(parseInput(input)))
+	a.Equal(126384, solvePuzzle1(parseInput(testInput), 2))
+	a.Equal(248684, solvePuzzle1(parseInput(input), 2))
 }

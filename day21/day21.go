@@ -1,7 +1,6 @@
 package main
 
 import (
-	"cmp"
 	_ "embed"
 	"fmt"
 	"math"
@@ -21,13 +20,14 @@ var dirRoutes map[byte]map[byte][]string = getRoutes(dirPad)
 func main() {
 	codes := parseInput(input)
 	fmt.Println(codes)
-	fmt.Println("Day07 solution1:", solvePuzzle1(codes))
+	fmt.Println("Day07 solution1:", solvePuzzle1(codes, 2))
+	fmt.Println("Day07 solution2:", solvePuzzle1(codes, 26))
 }
 
-func solvePuzzle1(codes []string) int {
+func solvePuzzle1(codes []string, level int) int {
 	sum := 0
 	for _, code := range codes {
-		sum += numOf(code) * convert(code, "", 'A', 0, 2)
+		sum += numOf(code) * convert("A"+code, "", 0, level)
 		// sum += numOf(code) * getMin(code, 2)
 	}
 	return sum
@@ -37,7 +37,7 @@ func parseInput(input string) (parsed []string) {
 	return strings.Split(strings.TrimSpace(input), "\n")
 }
 
-func toNums(input []byte, level int) []byte {
+func toNums(input string, level int) string {
 	var pad []byte = dirPad
 	if level == 0 {
 		pad = numPad
@@ -65,9 +65,9 @@ func toNums(input []byte, level int) []byte {
 		}
 	}
 	if level > 0 {
-		return toNums(output, level-1)
+		return toNums(string(output), level-1)
 	}
-	return output
+	return string(output)
 }
 
 type routes struct {
@@ -141,8 +141,18 @@ func searchRoutesFrom(pad []byte, from int) map[byte][]string {
 			builder.WriteRune('A')
 			strs = append(strs, builder.String())
 		}
-		slices.SortFunc(strs, func(a, b string) int { return cmp.Compare(rank(b), rank(a)) })
-		routes[to] = strs
+		// filter only the best routes by rank
+		maxRank := math.MinInt
+		for _, s := range strs {
+			r := rank(s)
+			switch {
+			case maxRank < r:
+				routes[to] = []string{s}
+				maxRank = r
+			case r == maxRank:
+				routes[to] = append(routes[to], s)
+			}
+		}
 	}
 	return routes
 }
@@ -199,82 +209,40 @@ func numOf(code string) int {
 	return n
 }
 
-func convert(code, prev string, from byte, level, maxLevel int) int {
+func convert(code, converted string, level, maxLevel int) int {
 	// fmt.Println(len(code), string(code), string(rune(from)), level, maxLevel, string(prev))
 	if level > maxLevel {
-		return len(code)
+		return len(code) - 1
 	}
-	if len(code) == 0 {
-		return convert(prev, "", 'A', level+1, maxLevel)
+	if len(code) == 1 {
+		// fmt.Println("level:", level, "code:", converted)
+		return convert("A"+converted, "", level+1, maxLevel)
 	}
-	to := byte(code[0])
+	from := code[0]
+	to := code[1]
 	routes := dirRoutes
 	if level == 0 {
 		routes = numRoutes
 	}
 	minLength := math.MaxInt
-	for _, r := range routes[from][to] {
-		next := prev + r
-		length := convert(code[1:], next, to, level, maxLevel)
+	if level == 0 {
+		for _, r := range routes[from][to] {
+			next := converted + r
+			length := convert(code[1:], next, level, maxLevel)
+			if length < minLength {
+				minLength = length
+			}
+		}
+	}
+	if level > 0 {
+		next := converted + routes[from][to][0]
+		length := convert(code[1:], next, level, maxLevel)
 		if length < minLength {
 			minLength = length
 		}
 	}
 	return minLength
 }
-
-// func convertOneLevel(code string, from byte, level int) []string {
-// 	if len(code) == 0 {
-// 		return []string{}
-// 	}
-// 	to := code[0]
-// 	routes := dirRoutes
-// 	if level == 0 {
-// 		routes = numRoutes
-// 	}
-// 	nextCodes := convertOneLevel(code[1:], to, level)
-// 	if len(nextCodes) == 0 {
-// 		return routes[from][to]
-// 	}
-// 	codes := []string{}
-// 	for _, c := range routes[from][to] {
-// 		for _, nc := range nextCodes {
-// 			codes = append(codes, c+nc)
-// 		}
-// 	}
-// 	return codes
-// }
-
-// func convertWithLevels(code string, maxLevel int) []string {
-// 	codes := []string{code}
-// 	for level := range maxLevel + 1 {
-// 		// maxRank := math.MinInt
-// 		// for _, nc := range next {
-// 		// 	r := rank(nc)
-// 		// 	if r > maxRank {
-// 		// 		maxRank = r
-// 		// 	}
-// 		// }
-// 		nextCodes := []string{}
-// 		for _, c := range codes {
-// 			nextCodes = append(nextCodes, convertOneLevel(c, 'A', level)...)
-// 			// fmt.Println("Code: ", c, "length:", len(c), "next codes:", nextCodes)
-// 		}
-// 		codes = nextCodes
-// 	}
-// 	return codes
-// }
-
-// func getMin(code string, maxLevel int) int {
-// 	codes := convertWithLevels(code, maxLevel)
-// 	min := math.MaxInt
-// 	for _, c := range codes {
-// 		if len(c) < min {
-// 			min = len(c)
-// 		}
-// 	}
-// 	return min
-// }
 
 func rank(code string) (rank int) {
 	if len(code) < 2 {
