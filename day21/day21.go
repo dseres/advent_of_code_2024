@@ -77,15 +77,11 @@ func padOf(level int) string {
 	return pad
 }
 
-type routes struct {
-	from, to   byte
-	directions [][]int
-}
-
 type node struct {
-	to            byte
-	index, length int
-	prevs         []int
+	from, to    byte
+	routes      [][]int // Routes are stored as sequence of index offsets. E.g.: [-3 -3 1 1]
+	index, dist int
+	prevs       []int
 }
 
 func getRoutes(pad string) map[byte]map[byte][]string {
@@ -99,56 +95,49 @@ func getRoutes(pad string) map[byte]map[byte][]string {
 	return rs
 }
 
-func searchRoutesFrom(pad string, from int) map[byte][]string {
-	visited := make(map[byte]routes)
-	visited[pad[from]] = routes{from: pad[from], to: pad[from], directions: [][]int{{from}}}
+func searchRoutesFrom(pad string, startInd int) map[byte][]string {
+	visited := make(map[byte]node)
+	start := pad[startInd]
+	visited[pad[startInd]] = node{from: start, to: start, index: startInd, routes: [][]int{{}}}
 	reachables := make(map[byte]node)
-	findReachables(pad, from, 0, visited, reachables)
-	// fmt.Println(pad, from, visited, reachables)
+	findReachables(pad, visited, reachables, visited[start])
 	for len(reachables) > 0 {
 		n := getNextReachable(reachables)
-		insertIntoVisiteds(pad, visited, from, n)
+		n = computeRoutesOfNode(pad, visited, n)
+		visited[n.to] = n
 		delete(reachables, n.to)
-		findReachables(pad, n.index, n.length, visited, reachables)
+		findReachables(pad, visited, reachables, n)
 	}
 	return convertVisiteds(visited)
 }
 
-func findReachables(pad string, fromInd, fromLength int, visited map[byte]routes, reachables map[byte]node) {
+func findReachables(pad string, visited, reachables map[byte]node, n node) {
 	dirs := []int{-3, 3, -1, 1}
 	for _, dir := range dirs {
-		next := fromInd + dir
+		nextInd := n.index + dir
 		// Is next position is valid?
-		if dir == -1 && fromInd%3 == 0 || dir == 1 && fromInd%3 == 2 {
+		if dir == -1 && n.index%3 == 0 || dir == 1 && n.index%3 == 2 {
 			continue
 		}
-		if next < 0 || len(pad) <= next || pad[next] == 'X' {
+		if nextInd < 0 || len(pad) <= nextInd || pad[nextInd] == 'X' {
 			continue
 		}
-		if _, ok := visited[pad[next]]; ok {
+		to := pad[nextInd]
+		if _, ok := visited[to]; ok {
 			continue
 		}
-		r, ok := reachables[pad[next]]
-		// A better route found to reachable point
-		if ok && fromLength+1 < r.length {
-			r.length = fromLength + 1
+		// Check next node in reachables
+		switch r, ok := reachables[to]; {
+		case ok && n.dist+1 < r.dist: // A better route found to node
+			r.dist = n.dist + 1
 			r.prevs = []int{dir}
-			reachables[pad[next]] = r
-			continue
-		}
-		// A new route found to reachable point
-		if ok && r.length == fromLength+1 {
+			reachables[to] = r
+		case ok && r.dist == n.dist+1: // A new route found to node
 			r.prevs = append(r.prevs, dir)
-			reachables[pad[next]] = r
-			continue
-		}
-		// Add point to reachables
-		if !ok {
-			r.to = pad[next]
-			r.length = fromLength + 1
-			r.prevs = []int{dir}
-			r.index = next
-			reachables[r.to] = r
+			reachables[to] = r
+		case !ok: // Add new node to reachables
+			r = node{from: n.from, to: to, index: nextInd, dist: n.dist + 1, prevs: []int{dir}}
+			reachables[to] = r
 		}
 	}
 }
@@ -156,32 +145,31 @@ func findReachables(pad string, fromInd, fromLength int, visited map[byte]routes
 func getNextReachable(reachables map[byte]node) node {
 	n, min := node{}, math.MaxInt
 	for _, rn := range reachables {
-		if rn.length < min {
+		if rn.dist < min {
 			n = rn
-			min = rn.length
+			min = rn.dist
 		}
 	}
 	return n
 }
 
-func insertIntoVisiteds(pad string, visited map[byte]routes, from int, n node) {
-	r := routes{from: pad[from], to: n.to}
+func computeRoutesOfNode(pad string, visited map[byte]node, n node) node {
 	for _, dir := range n.prevs {
-		v := visited[pad[n.index-dir]]
-		for _, ps := range v.directions {
-			ps2 := slices.Clone(ps)
-			ps2 = append(ps2, dir)
-			r.directions = append(r.directions, ps2)
+		prevNode := visited[pad[n.index-dir]]
+		for _, prevRoute := range prevNode.routes {
+			route := slices.Clone(prevRoute)
+			route = append(route, dir)
+			n.routes = append(n.routes, route)
 		}
 	}
-	visited[n.to] = r
+	return n
 }
 
-func convertVisiteds(visited map[byte]routes) map[byte][]string {
+func convertVisiteds(visited map[byte]node) map[byte][]string {
 	// Convert directions to string
 	routes := make(map[byte][]string)
 	for to, v := range visited {
-		strs := toRouteString(v.directions)
+		strs := routesAsString(v.routes)
 		// filter only the best routes by rank
 		maxRank := math.MinInt
 		for _, s := range strs {
@@ -198,11 +186,11 @@ func convertVisiteds(visited map[byte]routes) map[byte][]string {
 	return routes
 }
 
-func toRouteString(directions [][]int) []string {
+func routesAsString(directions [][]int) []string {
 	strs := []string{}
-	for _, r := range directions {
+	for _, route := range directions {
 		builder := strings.Builder{}
-		for _, dir := range r[1:] {
+		for _, dir := range route {
 			switch dir {
 			case -3:
 				builder.WriteRune('^')
@@ -230,15 +218,6 @@ func rank(code string) (rank int) {
 		}
 	}
 	return
-}
-
-func printRoutes(all map[byte]map[byte][]string) {
-	for from, rf := range all {
-		fmt.Printf("From %v:\n", string(from))
-		for to, rs := range rf {
-			fmt.Printf("\tto %v: %v\n", string(to), rs)
-		}
-	}
 }
 
 func numOf(code string) int {

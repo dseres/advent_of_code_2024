@@ -55,4 +55,5 @@ func TestSolution1(t *testing.T) {
 	a := assert.New(t)
 	a.Equal(126384, solvePuzzle(parseInput(testInput), 2))
 	a.Equal(248684, solvePuzzle(parseInput(input), 2))
+	a.Equal(307055584161760, solvePuzzle(parseInput(input), 25))
 }
