@@ -1,7 +1,7 @@
 package main
 
 import (
-	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,17 +41,14 @@ func TestToNum(t *testing.T) {
 
 func TestRoutes(t *testing.T) {
 	a := assert.New(t)
-	routesFromA := searchRoutesFrom(numPad, slices.Index(numPad, 'A'))
+	routesFromA := searchRoutesFrom(numPad, strings.Index(numPad, "A"))
 	a.Equal(2, len(routesFromA['5']))
 	a.Equal(1, len(routesFromA['7']))
-
-	printRoutes(numRoutes)
-	printRoutes(dirRoutes)
 }
 
 func TestConvert(t *testing.T) {
 	a := assert.New(t)
-	a.Equal(68, convert("A029A", 0, 2))
+	a.Equal(68, codeLength("A029A", 0, 2))
 }
 
 func TestSolution1(t *testing.T) {
