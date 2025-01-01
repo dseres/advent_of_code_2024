@@ -17,18 +17,25 @@ var dirPad []byte = []byte("X^A<v>")
 var numRoutes map[byte]map[byte][]string = getRoutes(numPad)
 var dirRoutes map[byte]map[byte][]string = getRoutes(dirPad)
 
+type key struct {
+	level int
+	code  string
+}
+
+var cache map[key]int = make(map[key]int)
+
 func main() {
 	codes := parseInput(input)
 	fmt.Println(codes)
-	fmt.Println("Day07 solution1:", solvePuzzle1(codes, 2))
-	fmt.Println("Day07 solution2:", solvePuzzle1(codes, 26))
+	fmt.Println("Day07 solution1:", solvePuzzle(codes, 2))
+	fmt.Println("Day07 solution2:", solvePuzzle(codes, 25))
 }
 
-func solvePuzzle1(codes []string, level int) int {
+func solvePuzzle(codes []string, level int) int {
+	cache = make(map[key]int)
 	sum := 0
 	for _, code := range codes {
-		sum += numOf(code) * convert("A"+code, "", 0, level)
-		// sum += numOf(code) * getMin(code, 2)
+		sum += numOf(code) * convert("A"+code, 0, level)
 	}
 	return sum
 }
@@ -209,39 +216,36 @@ func numOf(code string) int {
 	return n
 }
 
-func convert(code, converted string, level, maxLevel int) int {
-	// fmt.Println(len(code), string(code), string(rune(from)), level, maxLevel, string(prev))
+// Change BFS to DFS
+func convert(code string, level, maxLevel int) int {
 	if level > maxLevel {
 		return len(code) - 1
 	}
-	if len(code) == 1 {
-		// fmt.Println("level:", level, "code:", converted)
-		return convert("A"+converted, "", level+1, maxLevel)
-	}
-	from := code[0]
-	to := code[1]
 	routes := dirRoutes
 	if level == 0 {
 		routes = numRoutes
 	}
-	minLength := math.MaxInt
-	if level == 0 {
-		for _, r := range routes[from][to] {
-			next := converted + r
-			length := convert(code[1:], next, level, maxLevel)
-			if length < minLength {
-				minLength = length
+	k := key{level, code}
+	if v, ok := cache[k]; ok {
+		return v
+	}
+	sum := 0
+	for i := range code[:len(code)-1] {
+		from := code[i]
+		to := code[i+1]
+		routes := routes[from][to]
+		min := math.MaxInt
+		for _, r := range routes {
+			len := convert("A"+r, level+1, maxLevel)
+			if len < min {
+				min = len
 			}
 		}
+		sum += min
 	}
-	if level > 0 {
-		next := converted + routes[from][to][0]
-		length := convert(code[1:], next, level, maxLevel)
-		if length < minLength {
-			minLength = length
-		}
-	}
-	return minLength
+	cache[k] = sum
+	fmt.Println("key:", k, "value:", sum)
+	return sum
 }
 
 func rank(code string) (rank int) {

@@ -51,11 +51,11 @@ func TestRoutes(t *testing.T) {
 
 func TestConvert(t *testing.T) {
 	a := assert.New(t)
-	a.Equal(68, convert("A029A", "", 0, 2))
+	a.Equal(68, convert("A029A", 0, 2))
 }
 
 func TestSolution1(t *testing.T) {
 	a := assert.New(t)
-	a.Equal(126384, solvePuzzle1(parseInput(testInput), 2))
-	a.Equal(248684, solvePuzzle1(parseInput(input), 2))
+	a.Equal(126384, solvePuzzle(parseInput(testInput), 2))
+	a.Equal(248684, solvePuzzle(parseInput(input), 2))
 }
