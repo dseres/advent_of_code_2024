@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"fmt"
 	"math"
@@ -14,26 +15,22 @@ var input string
 
 var numPad []byte = []byte("789456123X0A")
 var dirPad []byte = []byte("X^A<v>")
-var numRoutes map[byte]map[byte]routes = getRoutes(numPad)
-var dirRoutes map[byte]map[byte]routes = getRoutes(dirPad)
+var numRoutes map[byte]map[byte][]string = getRoutes(numPad)
+var dirRoutes map[byte]map[byte][]string = getRoutes(dirPad)
 
 func main() {
 	codes := parseInput(input)
 	fmt.Println(codes)
 	fmt.Println("Day07 solution1:", solvePuzzle1(codes))
-	fmt.Println("Day07 solution2:", solvePuzzle2(codes))
 }
 
 func solvePuzzle1(codes []string) int {
 	sum := 0
 	for _, code := range codes {
-		sum += numOf(code) * convert([]byte(code), 'A', 0, 2, []byte{})
+		sum += numOf(code) * convert(code, "", 'A', 0, 2)
+		// sum += numOf(code) * getMin(code, 2)
 	}
 	return sum
-}
-
-func solvePuzzle2(codes []string) int {
-	return 0
 }
 
 func parseInput(input string) (parsed []string) {
@@ -73,14 +70,6 @@ func toNums(input []byte, level int) []byte {
 	return output
 }
 
-// func routesOnNumPad() [][]byte {
-// 	for i, line := range numPad {
-// 		for j, v := range line {
-
-// 		}
-// 	}
-// }
-
 type routes struct {
 	from, to  byte
 	positions [][]int
@@ -92,8 +81,8 @@ type node struct {
 	prevs         []int
 }
 
-func getRoutes(pad []byte) map[byte]map[byte]routes {
-	rs := make(map[byte]map[byte]routes)
+func getRoutes(pad []byte) map[byte]map[byte][]string {
+	rs := make(map[byte]map[byte][]string)
 	for i, from := range pad {
 		if from == 'X' {
 			continue
@@ -103,9 +92,9 @@ func getRoutes(pad []byte) map[byte]map[byte]routes {
 	return rs
 }
 
-func searchRoutesFrom(pad []byte, from int) map[byte]routes {
+func searchRoutesFrom(pad []byte, from int) map[byte][]string {
 	visited := make(map[byte]routes)
-	visited[pad[from]] = routes{from: pad[from], to: pad[from], positions: [][]int{[]int{from}}}
+	visited[pad[from]] = routes{from: pad[from], to: pad[from], positions: [][]int{{from}}}
 	reachables := make(map[byte]node)
 	findReachables(pad, from, 0, visited, reachables)
 	// fmt.Println(pad, from, visited, reachables)
@@ -120,7 +109,7 @@ func searchRoutesFrom(pad []byte, from int) map[byte]routes {
 		// fmt.Println(reachables, n)
 		r := routes{from: pad[from], to: n.to}
 		for _, prev := range n.prevs {
-			v, _ := visited[pad[n.index-prev]]
+			v := visited[pad[n.index-prev]]
 			for _, ps := range v.positions {
 				ps2 := slices.Clone(ps)
 				ps2 = append(ps2, prev)
@@ -131,24 +120,31 @@ func searchRoutesFrom(pad []byte, from int) map[byte]routes {
 		delete(reachables, n.to)
 		findReachables(pad, n.index, n.length, visited, reachables)
 	}
-	for _, rs := range visited {
+	// Convert directions to string
+	routes := make(map[byte][]string)
+	for to, rs := range visited {
+		strs := make([]string, 0, len(rs.positions))
 		for _, r := range rs.positions {
-			for i, d := range r[1:] {
+			builder := strings.Builder{}
+			for _, d := range r[1:] {
 				switch d {
 				case -3:
-					r[i] = '^'
+					builder.WriteRune('^')
 				case 3:
-					r[i] = 'v'
+					builder.WriteRune('v')
 				case -1:
-					r[i] = '<'
+					builder.WriteRune('<')
 				case 1:
-					r[i] = '>'
+					builder.WriteRune('>')
 				}
 			}
-			r[len(r)-1] = 'A'
+			builder.WriteRune('A')
+			strs = append(strs, builder.String())
 		}
+		slices.SortFunc(strs, func(a, b string) int { return cmp.Compare(rank(b), rank(a)) })
+		routes[to] = strs
 	}
-	return visited
+	return routes
 }
 
 func findReachables(pad []byte, fromInd, fromLength int, visited map[byte]routes, reachables map[byte]node) {
@@ -186,20 +182,11 @@ func findReachables(pad []byte, fromInd, fromLength int, visited map[byte]routes
 	}
 }
 
-func printRoutes(all map[byte]map[byte]routes) {
+func printRoutes(all map[byte]map[byte][]string) {
 	for from, rf := range all {
-		fmt.Printf("From %v:\n", string(rune(from)))
+		fmt.Printf("From %v:\n", string(from))
 		for to, rs := range rf {
-			fmt.Printf("\tto %v: [", string(rune(to)))
-			for i, r := range rs.positions {
-				for _, d := range r {
-					fmt.Print(string(rune(d)))
-				}
-				if i < len(rs.positions)-1 {
-					fmt.Print(", ")
-				}
-			}
-			fmt.Printf("]\n")
+			fmt.Printf("\tto %v: %v\n", string(to), rs)
 		}
 	}
 }
@@ -212,43 +199,91 @@ func numOf(code string) int {
 	return n
 }
 
-var cache map[string]int = make(map[string]int)
-
-func convert(code []byte, from byte, level, maxLevel int, prev []byte) int {
+func convert(code, prev string, from byte, level, maxLevel int) int {
 	// fmt.Println(len(code), string(code), string(rune(from)), level, maxLevel, string(prev))
 	if level > maxLevel {
 		return len(code)
 	}
 	if len(code) == 0 {
-		return convert(prev, 'A', level+1, maxLevel, []byte{})
+		return convert(prev, "", 'A', level+1, maxLevel)
 	}
-	// // Checking cache
-	// k := string(code)
-	// if level == maxLevel {
-	// 	if val, ok := cache[k]; ok {
-	// 		return val
-	// 	}
-	// }
 	to := byte(code[0])
 	routes := dirRoutes
 	if level == 0 {
 		routes = numRoutes
 	}
 	minLength := math.MaxInt
-	for _, r := range routes[from][to].positions {
-		next := slices.Clone(prev)
-		for _, c := range r {
-			next = append(next, byte(c))
-		}
-		length := convert(code[1:], to, level, maxLevel, next)
+	for _, r := range routes[from][to] {
+		next := prev + r
+		length := convert(code[1:], next, to, level, maxLevel)
 		if length < minLength {
 			minLength = length
 		}
 	}
-	// //caching
-	// if level == maxLevel {
-	// 	cache[k] = minLength
-	// 	fmt.Println("caching", k, minLength)
-	// }
 	return minLength
+}
+
+// func convertOneLevel(code string, from byte, level int) []string {
+// 	if len(code) == 0 {
+// 		return []string{}
+// 	}
+// 	to := code[0]
+// 	routes := dirRoutes
+// 	if level == 0 {
+// 		routes = numRoutes
+// 	}
+// 	nextCodes := convertOneLevel(code[1:], to, level)
+// 	if len(nextCodes) == 0 {
+// 		return routes[from][to]
+// 	}
+// 	codes := []string{}
+// 	for _, c := range routes[from][to] {
+// 		for _, nc := range nextCodes {
+// 			codes = append(codes, c+nc)
+// 		}
+// 	}
+// 	return codes
+// }
+
+// func convertWithLevels(code string, maxLevel int) []string {
+// 	codes := []string{code}
+// 	for level := range maxLevel + 1 {
+// 		// maxRank := math.MinInt
+// 		// for _, nc := range next {
+// 		// 	r := rank(nc)
+// 		// 	if r > maxRank {
+// 		// 		maxRank = r
+// 		// 	}
+// 		// }
+// 		nextCodes := []string{}
+// 		for _, c := range codes {
+// 			nextCodes = append(nextCodes, convertOneLevel(c, 'A', level)...)
+// 			// fmt.Println("Code: ", c, "length:", len(c), "next codes:", nextCodes)
+// 		}
+// 		codes = nextCodes
+// 	}
+// 	return codes
+// }
+
+// func getMin(code string, maxLevel int) int {
+// 	codes := convertWithLevels(code, maxLevel)
+// 	min := math.MaxInt
+// 	for _, c := range codes {
+// 		if len(c) < min {
+// 			min = len(c)
+// 		}
+// 	}
+// 	return min
+// }
+
+func rank(code string) (rank int) {
+	if len(code) < 2 {
+		return 0
+	}
+	for i := range code[:len(code)-1] {
+		if code[i] == code[i+1] {
+			rank++
+		}
+	}
+	return
 }

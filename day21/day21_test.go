@@ -42,8 +42,8 @@ func TestToNum(t *testing.T) {
 func TestRoutes(t *testing.T) {
 	a := assert.New(t)
 	routesFromA := searchRoutesFrom(numPad, slices.Index(numPad, 'A'))
-	a.Equal(4, len(routesFromA[56].positions))
-	a.Equal(9, len(routesFromA[55].positions))
+	a.Equal(4, len(routesFromA[56]))
+	a.Equal(9, len(routesFromA[55]))
 
 	printRoutes(numRoutes)
 	printRoutes(dirRoutes)
@@ -51,17 +51,25 @@ func TestRoutes(t *testing.T) {
 
 func TestConvert(t *testing.T) {
 	a := assert.New(t)
-	a.Equal(68, convert([]byte("029A"), 'A', 0, 2, []byte{}))
+	a.Equal(68, convert("029A", "", 'A', 0, 2))
 }
+
+// func TestConvertWithLevels(t *testing.T) {
+// 	a := assert.New(t)
+
+// 	a.Equal(3, len(convertOneLevel("029A", 'A', 0)))
+// 	a.Equal(3, len(convertWithLevels("029A", 0)))
+
+// 	a.Equal(68, getMin("029A", 2))
+// 	a.Equal(60, getMin("980A", 2))
+// 	a.Equal(68, getMin("179A", 2))
+// 	a.Equal(64, getMin("456A", 2))
+// 	a.Equal(64, getMin("379A", 2))
+// }
 
 func TestSolution1(t *testing.T) {
 	result := solvePuzzle1(parseInput(testInput))
 	a := assert.New(t)
 	a.Equal(126384, result)
+	a.Equal(248684, solvePuzzle1(parseInput(input)))
 }
-
-// func TestSolution2(t *testing.T) {
-// 	result := solvePuzzle2(parseInput(testInput))
-// 	a := assert.New(t)
-// 	a.Equal(0, result)
-// }
