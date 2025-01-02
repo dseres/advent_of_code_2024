@@ -3,15 +3,13 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"math"
+	"slices"
 	"strconv"
 	"strings"
 )
 
 //go:embed input22.txt
 var input string
-
-type key struct{ a, b, c, d int }
 
 func main() {
 	nums := parseInput(input)
@@ -28,18 +26,12 @@ func solvePuzzle1(nums []int) int {
 }
 
 func solvePuzzle2(nums []int) int {
-	all := map[key]int{}
-	maxPrice := math.MinInt
+	var bananas = make([]int, 1<<20)
+
 	for _, n := range nums {
-		for k, v := range prices(n) {
-			price := all[k] + v
-			all[k] = price
-			if price > maxPrice {
-				maxPrice = price
-			}
-		}
+		prices(bananas, n)
 	}
-	return maxPrice
+	return slices.Max(bananas)
 }
 
 func parseInput(input string) (parsed []int) {
@@ -69,23 +61,20 @@ func generate(n, iterations int) int {
 	return n
 }
 
-func prices(seed int) (prices map[key]int) {
-	prices = make(map[key]int)
-	diffs := make([]int, 0, 2000)
-	n := seed
-	prev := seed % 10
-	for range 1999 {
-		n = nextSecret(n)
-		price := n % 10
-		diffs = append(diffs, price-prev)
-		prev = price
-		if len(diffs) == 4 {
-			k := key{diffs[0], diffs[1], diffs[2], diffs[3]}
-			if _, ok := prices[k]; !ok {
-				prices[k] = price
+func prices(bananas []int, seed int) {
+	var visited = make([]bool, 1<<20)
+	k := int32(0)
+	for i := range 2000 {
+		next := nextSecret(seed)
+		diff := next%10 - seed%10 + 10
+		k = ((k & (1<<15 - 1)) << 5) | int32(diff)
+		if i >= 3 {
+			if !visited[k] {
+				visited[k] = true
+				bananas[k] += next % 10
 			}
-			diffs = diffs[1:]
+
 		}
+		seed = next
 	}
-	return
 }

@@ -33,14 +33,6 @@ func TestSolution1(t *testing.T) {
 	a.Equal(21147129593, solvePuzzle1(parseInput(input)))
 }
 
-func TestSequences(t *testing.T) {
-	a := assert.New(t)
-	a.Equal(7, prices(1)[key{-2, 1, -1, 3}])
-	a.Equal(7, prices(2)[key{-2, 1, -1, 3}])
-	a.Equal(0, prices(3)[key{-2, 1, -1, 3}])
-	a.Equal(9, prices(2024)[key{-2, 1, -1, 3}])
-}
-
 func TestSolution2(t *testing.T) {
 	result := solvePuzzle2([]int{1, 2, 3, 2024})
 	a := assert.New(t)
