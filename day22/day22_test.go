@@ -1,14 +1,12 @@
 package main
 
-import "testing"
-import "github.com/stretchr/testify/assert"
+import (
+	"testing"
 
-var testInput = `1
-10
-100
-2024`
+	"github.com/stretchr/testify/assert"
+)
 
-var testResults = []int{8685429, 4700978, 15273692, 8667524}
+var nums = []int{1, 10, 100, 2024}
 
 func TestNextSecret(t *testing.T) {
 	a := assert.New(t)
@@ -18,24 +16,33 @@ func TestNextSecret(t *testing.T) {
 		num = nextSecret(num)
 		a.Equal(num, s)
 	}
+}
 
-	nums := parseInput(testInput)
+func TestGenerate(t *testing.T) {
+	a := assert.New(t)
+	var requirements = []int{8685429, 4700978, 15273692, 8667524}
 	for i, n := range nums {
-		for range 2000 {
-			n = nextSecret(n)
-		}
-		a.Equal(testResults[i], n)
+		a.Equal(requirements[i], generate(n, 2000))
 	}
 }
 
 func TestSolution1(t *testing.T) {
-	result := solvePuzzle1(parseInput(testInput))
+	result := solvePuzzle1(nums)
 	a := assert.New(t)
 	a.Equal(37327623, result)
+	a.Equal(21147129593, solvePuzzle1(parseInput(input)))
+}
+
+func TestSequences(t *testing.T) {
+	a := assert.New(t)
+	a.Equal(7, prices(1)[key{-2, 1, -1, 3}])
+	a.Equal(7, prices(2)[key{-2, 1, -1, 3}])
+	a.Equal(0, prices(3)[key{-2, 1, -1, 3}])
+	a.Equal(9, prices(2024)[key{-2, 1, -1, 3}])
 }
 
 func TestSolution2(t *testing.T) {
-	result := solvePuzzle2(parseInput(testInput))
+	result := solvePuzzle2([]int{1, 2, 3, 2024})
 	a := assert.New(t)
-	a.Equal(0, result)
+	a.Equal(23, result)
 }
