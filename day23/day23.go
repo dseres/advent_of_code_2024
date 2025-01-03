@@ -13,12 +13,24 @@ var input string
 
 func main() {
 	g := parseInput(input)
+	fmt.Println(g)
 	fmt.Println("Day07 solution1:", solvePuzzle1(g))
 	fmt.Println("Day07 solution2:", solvePuzzle2(g))
 }
 
+type trio struct{ a, b, c int16 }
+
 func solvePuzzle1(g graph) int {
-	return 0
+	p := make([]int16, 0, len(g))
+	for k := range g {
+		p = append(p, k)
+	}
+	cliques := bronKerbosh2(g, []int16{}, p, []int16{})
+	trios := make(map[trio]struct{})
+	for _, clique := range cliques {
+		getTrios(trios, clique)
+	}
+	return len(trios)
 }
 
 func solvePuzzle2(g graph) int {
@@ -46,6 +58,10 @@ func str2Int16(s string) int16 {
 	return int16(s[0]-'a')*int16('z'-'a'+1) + int16(s[1]-'a')
 }
 
+func int162Str(i int16) string {
+	return fmt.Sprintf("%c%c", i/('z'-'a'+1)+'a', i%('z'-'a'+1)+'a')
+}
+
 func startWithT(n int16) bool {
 	return n/('z'-'a'+1) == 't'-'a'
 }
@@ -61,6 +77,18 @@ func insertOneDir(g graph, from, to int16) {
 		return
 	}
 	g[from] = []int16{to}
+}
+
+func clique2String(clique []int16) string {
+	b := strings.Builder{}
+	b.WriteString("[")
+	b.WriteString(int162Str(clique[0]))
+	for _, i := range clique[1:] {
+		b.WriteString(", ")
+		b.WriteString(int162Str(i))
+	}
+	b.WriteString("]")
+	return b.String()
 }
 
 // algorithm BronKerbosch2(R, P, X) is
@@ -118,4 +146,31 @@ func bronKerbosh2(n graph, r, p, x []int16) (found [][]int16) {
 	}
 	slices.SortFunc(found, func(a, b []int16) int { return slices.Compare(a, b) })
 	return
+}
+
+func getTrios(trios map[trio]struct{}, clique []int16) {
+	if len(clique) < 3 {
+		return
+	}
+	if len(clique) == 3 {
+		t := trio{clique[0], clique[1], clique[2]}
+		if hasT(t) {
+			trios[t] = struct{}{}
+		}
+		return
+	}
+	for i, c1 := range clique {
+		for j, c2 := range clique[i+1:] {
+			for _, c3 := range clique[i+j+2:] {
+				t := trio{c1, c2, c3}
+				if hasT(t) {
+					trios[t] = struct{}{}
+				}
+			}
+		}
+	}
+}
+
+func hasT(t trio) bool {
+	return startWithT(t.a) || startWithT(t.b) || startWithT(t.c)
 }

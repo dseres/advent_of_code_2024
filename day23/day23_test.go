@@ -90,7 +90,7 @@ func TestSolution1(t *testing.T) {
 	fmt.Println(g)
 	result := solvePuzzle1(g)
 	a := assert.New(t)
-	a.Equal(0 /*7*/, result)
+	a.Equal(7, result)
 }
 
 func TestSolution2(t *testing.T) {
