@@ -4,6 +4,7 @@ import (
 	"cmp"
 	_ "embed"
 	"fmt"
+	"math"
 	"slices"
 	"strings"
 )
@@ -13,19 +14,15 @@ var input string
 
 func main() {
 	g := parseInput(input)
+	cliques := getCliques(g)
 	fmt.Println(g)
-	fmt.Println("Day07 solution1:", solvePuzzle1(g))
-	fmt.Println("Day07 solution2:", solvePuzzle2(g))
+	fmt.Println("Day07 solution1:", solvePuzzle1(cliques))
+	fmt.Println("Day07 solution2:", solvePuzzle2(cliques))
 }
 
 type trio struct{ a, b, c int16 }
 
-func solvePuzzle1(g graph) int {
-	p := make([]int16, 0, len(g))
-	for k := range g {
-		p = append(p, k)
-	}
-	cliques := bronKerbosh2(g, []int16{}, p, []int16{})
+func solvePuzzle1(cliques [][]int16) int {
 	trios := make(map[trio]struct{})
 	for _, clique := range cliques {
 		getTrios(trios, clique)
@@ -33,8 +30,16 @@ func solvePuzzle1(g graph) int {
 	return len(trios)
 }
 
-func solvePuzzle2(g graph) int {
-	return 0
+func solvePuzzle2(cliques [][]int16) string {
+	mc, maxLen := []int16{}, math.MinInt
+	for _, c := range cliques {
+		if len(c) > maxLen {
+			mc = c
+			maxLen = len(c)
+		}
+	}
+	fmt.Println(clique2String(mc))
+	return clique2String(mc)
 }
 
 type graph = map[int16][]int16
@@ -81,13 +86,11 @@ func insertOneDir(g graph, from, to int16) {
 
 func clique2String(clique []int16) string {
 	b := strings.Builder{}
-	b.WriteString("[")
 	b.WriteString(int162Str(clique[0]))
 	for _, i := range clique[1:] {
-		b.WriteString(", ")
+		b.WriteString(",")
 		b.WriteString(int162Str(i))
 	}
-	b.WriteString("]")
 	return b.String()
 }
 
@@ -146,6 +149,14 @@ func bronKerbosh2(n graph, r, p, x []int16) (found [][]int16) {
 	}
 	slices.SortFunc(found, func(a, b []int16) int { return slices.Compare(a, b) })
 	return
+}
+
+func getCliques(g graph) [][]int16 {
+	p := make([]int16, 0, len(g))
+	for k := range g {
+		p = append(p, k)
+	}
+	return bronKerbosh2(g, []int16{}, p, []int16{})
 }
 
 func getTrios(trios map[trio]struct{}, clique []int16) {

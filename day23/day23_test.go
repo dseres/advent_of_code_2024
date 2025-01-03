@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"slices"
 	"testing"
 
@@ -86,15 +85,16 @@ func TestBronKerbosh2(t *testing.T) {
 
 func TestSolution1(t *testing.T) {
 	g := parseInput(testInput)
-	fmt.Println('z' - 'a' + 1)
-	fmt.Println(g)
-	result := solvePuzzle1(g)
+	cliques := getCliques(g)
+	result := solvePuzzle1(cliques)
 	a := assert.New(t)
 	a.Equal(7, result)
 }
 
 func TestSolution2(t *testing.T) {
-	result := solvePuzzle2(parseInput(testInput))
+	g := parseInput(testInput)
+	cliques := getCliques(g)
+	result := solvePuzzle2(cliques)
 	a := assert.New(t)
-	a.Equal(0, result)
+	a.Equal("co,de,ka,ta", result)
 }
