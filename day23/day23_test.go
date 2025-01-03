@@ -64,6 +64,24 @@ func TestGraph(t *testing.T) {
 	for _, n := range g[16] {
 		a.True(slices.Contains(g[n], 16))
 	}
+
+	a.True(startWithT(str2Int16("tc")))
+	a.True(startWithT(str2Int16("td")))
+}
+
+func TestBronKerbosh2(t *testing.T) {
+	g := graph{}
+	insert(g, 1, 2)
+	insert(g, 1, 5)
+	insert(g, 2, 3)
+	insert(g, 2, 5)
+	insert(g, 3, 4)
+	insert(g, 4, 5)
+	insert(g, 4, 6)
+	cliques := bronKerbosh2(g, []int16{}, []int16{1, 2, 3, 4, 5, 6}, []int16{})
+	a := assert.New(t)
+	req := [][]int16{{1, 2, 5}, {2, 3}, {3, 4}, {4, 5}, {4, 6}}
+	a.Equal(req, cliques)
 }
 
 func TestSolution1(t *testing.T) {
