@@ -67,13 +67,11 @@ func prices(bananas []int, seed int) {
 	for i := range 2000 {
 		next := nextSecret(seed)
 		diff := next%10 - seed%10 + 10
+		// diff is between 1 and 19. A 5 bit long integer is enough to store.
 		k = ((k & (1<<15 - 1)) << 5) | int32(diff)
-		if i >= 3 {
-			if !visited[k] {
-				visited[k] = true
-				bananas[k] += next % 10
-			}
-
+		if i >= 3 && !visited[k] {
+			visited[k] = true
+			bananas[k] += next % 10
 		}
 		seed = next
 	}
