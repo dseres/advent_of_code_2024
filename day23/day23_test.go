@@ -1,7 +1,6 @@
 package main
 
 import (
-	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,8 +46,9 @@ func TestGraph(t *testing.T) {
 	a.Equal(int16(58), str2Int16("cg"))
 	g := parseInput(testInput)
 	a.Equal(4, len(g[16]))
-	for _, n := range g[16] {
-		a.True(slices.Contains(g[n], 16))
+	for n := range g[16] {
+		_, ok := g[n]
+		a.True(ok)
 	}
 
 	a.True(startWithT(str2Int16("tc")))

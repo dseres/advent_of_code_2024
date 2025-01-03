@@ -12,7 +12,7 @@ import (
 //go:embed input23.txt
 var input string
 
-type graph = map[int16][]int16
+type graph = map[int16]set
 type trio struct{ a, b, c int16 }
 type set = map[int16]struct{}
 
@@ -75,11 +75,10 @@ func insert(g graph, a, b int16) {
 }
 
 func insertOneDir(g graph, from, to int16) {
-	if _, ok := g[from]; ok {
-		g[from] = append(g[from], to)
-		return
+	if _, ok := g[from]; !ok {
+		g[from] = make(set)
 	}
-	g[from] = []int16{to}
+	g[from][to] = struct{}{}
 }
 
 func clique2String(clique []int16) string {
@@ -145,22 +144,22 @@ func pivot(n graph, p, x set) int16 {
 	return u
 }
 
-func minus(a set, b []int16) set {
+func minus(a set, b set) set {
 	m := maps.Clone(a)
-	for _, k := range b {
+	for k := range b {
 		delete(m, k)
 	}
 	return m
 }
 
-func intersect(a set, b []int16) set {
-	m := make(set)
-	for _, k := range b {
+func intersect(a set, b set) set {
+	i := make(set)
+	for k := range b {
 		if _, ok := a[k]; ok {
-			m[k] = struct{}{}
+			i[k] = struct{}{}
 		}
 	}
-	return m
+	return i
 }
 
 func getSortedCliques(g graph) [][]int16 {
