@@ -1,9 +1,9 @@
 package main
 
 import (
-	"cmp"
 	_ "embed"
 	"fmt"
+	"maps"
 	"math"
 	"slices"
 	"strings"
@@ -12,15 +12,16 @@ import (
 //go:embed input23.txt
 var input string
 
+type graph = map[int16][]int16
+type trio struct{ a, b, c int16 }
+type set = map[int16]struct{}
+
 func main() {
 	g := parseInput(input)
 	cliques := getCliques(g)
-	fmt.Println(g)
 	fmt.Println("Day07 solution1:", solvePuzzle1(cliques))
 	fmt.Println("Day07 solution2:", solvePuzzle2(cliques))
 }
-
-type trio struct{ a, b, c int16 }
 
 func solvePuzzle1(cliques [][]int16) int {
 	trios := make(map[trio]struct{})
@@ -38,11 +39,8 @@ func solvePuzzle2(cliques [][]int16) string {
 			maxLen = len(c)
 		}
 	}
-	fmt.Println(clique2String(mc))
 	return clique2String(mc)
 }
-
-type graph = map[int16][]int16
 
 func parseInput(input string) (g graph) {
 	g = make(graph)
@@ -94,94 +92,100 @@ func clique2String(clique []int16) string {
 	return b.String()
 }
 
+// This function is implementation of the Bron-Kerbosh graph algorithm with pivot point
+//
 // algorithm BronKerbosch2(R, P, X) is
-//     if P and X are both empty then
-//         report R as a maximal clique
-//     choose a pivot vertex u in P ⋃ X
-//     for each vertex v in P \ N(u) do
-//         BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
-//         P := P \ {v}
-//         X := X ⋃ {v}
-
-func bronKerbosh2(n graph, r, p, x []int16) (found [][]int16) {
+//
+//	if P and X are both empty then
+//	    report R as a maximal clique
+//	choose a pivot vertex u in P ⋃ X
+//	for each vertex v in P \ N(u) do
+//	    BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
+//	    P := P \ {v}
+//	    X := X ⋃ {v}
+func bronKerbosh2(n graph, r, p, x set) (found [][]int16) {
 	// fmt.Println("BronKerbosh:", r, p, x)
 	if len(p) == 0 && len(x) == 0 {
-		slices.Sort(r)
-		// fmt.Println("found: ", r)
-		return [][]int16{r}
+		clique := slices.Collect(maps.Keys(r))
+		slices.Sort(clique)
+		return [][]int16{clique}
 	}
-	// pivot vertex has maximum neighbours
-	pUx := slices.Concat(p, x)
-	u := slices.MaxFunc(pUx, func(a, b int16) int {
-		return cmp.Compare(len(n[a]), len(n[b]))
-	})
-	// fmt.Println("u, n[u]:", u, n[u])
+	u := pivot(n, p, x)
 	// for each vertex v in P \ N(u) do
-	for _, v := range slices.Clone(p) {
-		if slices.Contains(n[u], v) {
-			continue
-		}
-		// fmt.Println("v, n[v]:", v, n[v])
+	for v := range minus(p, n[u]) {
 		// R ⋃ {v}
-		r2 := slices.Clone(r)
-		r2 = append(r2, v)
+		r2 := maps.Clone(r)
+		r2[v] = struct{}{}
 		// P ⋂ N(v)
-		p2 := []int16{}
-		for _, v2 := range p {
-			if slices.Contains(n[v], v2) {
-				p2 = append(p2, v2)
-			}
-		}
+		p2 := intersect(p, n[v])
 		// X ⋂ N(v)
-		x2 := []int16{}
-		for _, v2 := range x {
-			if slices.Contains(n[v], v2) {
-				x2 = append(x2, v2)
-			}
-		}
+		x2 := intersect(x, n[v])
 		f := bronKerbosh2(n, r2, p2, x2)
 		found = append(found, f...)
 		// move v from p to x
-		vi := slices.Index(p, v)
-		p = slices.Delete(p, vi, vi+1)
-		x = append(x, v)
-		// fmt.Println(p, x)
+		delete(p, v)
+		x[v] = struct{}{}
 	}
 	slices.SortFunc(found, func(a, b []int16) int { return slices.Compare(a, b) })
 	return
 }
 
-func getCliques(g graph) [][]int16 {
-	p := make([]int16, 0, len(g))
-	for k := range g {
-		p = append(p, k)
+func union(a, b set) set {
+	u := maps.Clone(a)
+	maps.Insert(u, maps.All(b))
+	return u
+}
+
+func pivot(n graph, p, x set) int16 {
+	pUx := union(p, x)
+	u, maxN := int16(0), math.MinInt16
+	for k := range pUx {
+		if len(n[k]) > maxN {
+			maxN = len(n[k])
+			u = k
+		}
 	}
-	return bronKerbosh2(g, []int16{}, p, []int16{})
+	return u
+}
+
+func minus(a set, b []int16) set {
+	m := maps.Clone(a)
+	for _, k := range b {
+		delete(m, k)
+	}
+	return m
+}
+
+func intersect(a set, b []int16) set {
+	m := make(set)
+	for _, k := range b {
+		if _, ok := a[k]; ok {
+			m[k] = struct{}{}
+		}
+	}
+	return m
+}
+
+func getCliques(g graph) [][]int16 {
+	p := make(set)
+	for k := range g {
+		p[k] = struct{}{}
+	}
+	return bronKerbosh2(g, make(set), p, make(set))
 }
 
 func getTrios(trios map[trio]struct{}, clique []int16) {
 	if len(clique) < 3 {
 		return
 	}
-	if len(clique) == 3 {
-		t := trio{clique[0], clique[1], clique[2]}
-		if hasT(t) {
-			trios[t] = struct{}{}
-		}
-		return
-	}
-	for i, c1 := range clique {
-		for j, c2 := range clique[i+1:] {
-			for _, c3 := range clique[i+j+2:] {
-				t := trio{c1, c2, c3}
-				if hasT(t) {
+	for i, a := range clique {
+		for j, b := range clique[i+1:] {
+			for _, c := range clique[i+j+2:] {
+				if startWithT(a) || startWithT(b) || startWithT(c) {
+					t := trio{a, b, c}
 					trios[t] = struct{}{}
 				}
 			}
 		}
 	}
-}
-
-func hasT(t trio) bool {
-	return startWithT(t.a) || startWithT(t.b) || startWithT(t.c)
 }

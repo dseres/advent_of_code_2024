@@ -41,19 +41,6 @@ tb-vc
 td-yn
 `
 
-var interconnected = `aq,cg,yn
-aq,vc,wq
-co,de,ka
-co,de,ta
-co,ka,ta
-de,ka,ta
-kh,qp,ub
-qp,td,wh
-tb,vc,wq
-tc,td,wh
-td,wh,yn
-ub,vc,wq`
-
 func TestGraph(t *testing.T) {
 	a := assert.New(t)
 	a.Equal(int16(16), str2Int16("aq"))
@@ -77,7 +64,11 @@ func TestBronKerbosh2(t *testing.T) {
 	insert(g, 3, 4)
 	insert(g, 4, 5)
 	insert(g, 4, 6)
-	cliques := bronKerbosh2(g, []int16{}, []int16{1, 2, 3, 4, 5, 6}, []int16{})
+	p := set{}
+	for k := range g {
+		p[k] = struct{}{}
+	}
+	cliques := bronKerbosh2(g, set{}, p, set{})
 	a := assert.New(t)
 	req := [][]int16{{1, 2, 5}, {2, 3}, {3, 4}, {4, 5}, {4, 6}}
 	a.Equal(req, cliques)
