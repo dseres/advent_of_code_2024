@@ -68,7 +68,7 @@ func TestBronKerbosh2(t *testing.T) {
 	for k := range g {
 		p[k] = struct{}{}
 	}
-	cliques := bronKerbosh2(g, set{}, p, set{})
+	cliques := getSortedCliques(g)
 	a := assert.New(t)
 	req := [][]int16{{1, 2, 5}, {2, 3}, {3, 4}, {4, 5}, {4, 6}}
 	a.Equal(req, cliques)
@@ -76,7 +76,7 @@ func TestBronKerbosh2(t *testing.T) {
 
 func TestSolution1(t *testing.T) {
 	g := parseInput(testInput)
-	cliques := getCliques(g)
+	cliques := getSortedCliques(g)
 	result := solvePuzzle1(cliques)
 	a := assert.New(t)
 	a.Equal(7, result)
@@ -84,7 +84,7 @@ func TestSolution1(t *testing.T) {
 
 func TestSolution2(t *testing.T) {
 	g := parseInput(testInput)
-	cliques := getCliques(g)
+	cliques := getSortedCliques(g)
 	result := solvePuzzle2(cliques)
 	a := assert.New(t)
 	a.Equal("co,de,ka,ta", result)

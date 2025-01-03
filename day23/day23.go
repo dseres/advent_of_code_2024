@@ -18,7 +18,7 @@ type set = map[int16]struct{}
 
 func main() {
 	g := parseInput(input)
-	cliques := getCliques(g)
+	cliques := getSortedCliques(g)
 	fmt.Println("Day07 solution1:", solvePuzzle1(cliques))
 	fmt.Println("Day07 solution2:", solvePuzzle2(cliques))
 }
@@ -103,12 +103,12 @@ func clique2String(clique []int16) string {
 //	    BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
 //	    P := P \ {v}
 //	    X := X ⋃ {v}
-func bronKerbosh2(n graph, r, p, x set) (found [][]int16) {
+func bronKerbosh2(n graph, r, p, x set, found *[][]int16) {
 	// fmt.Println("BronKerbosh:", r, p, x)
 	if len(p) == 0 && len(x) == 0 {
 		clique := slices.Collect(maps.Keys(r))
 		slices.Sort(clique)
-		return [][]int16{clique}
+		*found = append(*found, clique)
 	}
 	u := pivot(n, p, x)
 	// for each vertex v in P \ N(u) do
@@ -120,14 +120,11 @@ func bronKerbosh2(n graph, r, p, x set) (found [][]int16) {
 		p2 := intersect(p, n[v])
 		// X ⋂ N(v)
 		x2 := intersect(x, n[v])
-		f := bronKerbosh2(n, r2, p2, x2)
-		found = append(found, f...)
+		bronKerbosh2(n, r2, p2, x2, found)
 		// move v from p to x
 		delete(p, v)
 		x[v] = struct{}{}
 	}
-	slices.SortFunc(found, func(a, b []int16) int { return slices.Compare(a, b) })
-	return
 }
 
 func union(a, b set) set {
@@ -166,12 +163,15 @@ func intersect(a set, b []int16) set {
 	return m
 }
 
-func getCliques(g graph) [][]int16 {
+func getSortedCliques(g graph) [][]int16 {
 	p := make(set)
 	for k := range g {
 		p[k] = struct{}{}
 	}
-	return bronKerbosh2(g, make(set), p, make(set))
+	cliques := [][]int16{}
+	bronKerbosh2(g, make(set), p, make(set), &cliques)
+	slices.SortFunc(cliques, func(a, b []int16) int { return slices.Compare(a, b) })
+	return cliques
 }
 
 func getTrios(trios map[trio]struct{}, clique []int16) {
