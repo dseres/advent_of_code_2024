@@ -29,18 +29,19 @@ type gate struct {
 
 type opFun = func(a, b int) int
 
-var adderImage = ` Wires of Ripple-carry adder
+var adderImage = ` Wires of Ripple-carry adder #%v
 
- ---X---+---->+-----+
-        |     | XOR |--E---+------->+-----+
- ---Y-----+-->+-----+      |        | XOR |--------------Z------>
-        | |             |---------->+-----+
-        | |-->+-----+   |  |
-        |     | AND |-------------------F------>+----+
-        |---->+-----+   |  |                    | OR |--C out -->
-                        |  |->+-----+      |--->+----+
-                        |     | AND |---G--|
- ---C-------------------+---->+-----+
+ ---X:%3s---+---->+-----+
+            |     | XOR |------+---E:%3s---->+-----+
+ ---Y:%3s-----+-->+-----+      |             | XOR |-------------Z:%3s------>
+            | |             |--------------->+-----+
+            | |-->+-----+   |  |
+            |     | AND |-------------------F:%3s------>+----+
+            |---->+-----+   |  |                        | OR |--C out:%3s--->
+                            |  |->+-----+          |--->+----+
+                            |     | AND |---G:%3s--|
+ ---C:%3s-------------------+---->+-----+
+
 `
 
 type adder struct {
@@ -156,6 +157,10 @@ func (m machine) String() string {
 	return b.String()
 }
 
+func (a adder) String() string {
+	return fmt.Sprintf(adderImage, a.id, a.x, a.e, a.y, a.z, a.f, a.cout, a.g, a.c)
+}
+
 func solvePuzzle1(m machine) int {
 	n := 0
 	for k := range m.gates {
@@ -193,11 +198,18 @@ func (g gate) bitNo() int {
 func solvePuzzle2(m machine) int {
 	fmt.Println("bits: ", m.bits)
 	m.buildAdders()
+	depIndex := m.dependantIndex()
+	m.checkAllXY(depIndex)
+	fmt.Println(m.adders)
 	return 0
 }
 
 func (m *machine) buildAdders() {
-	// x00, y00 -> z00
+	m.adders = make([]adder, 0, m.bits)
+	for i := range m.bits {
+		a := adder{id: i}
+		m.adders = append(m.adders, a)
+	}
 }
 
 func (m machine) getX() int {
@@ -238,4 +250,70 @@ func (a adder) getYid() string {
 }
 func (a adder) getZid() string {
 	return fmt.Sprintf("z%02d", a.id)
+}
+
+// dependantIndex will show which gates depends on a wire
+func (m machine) dependantIndex() (index map[string][]*gate) {
+	index = make(map[string][]*gate)
+	for _, g := range m.gates {
+		if g.left != nil && g.right != nil {
+			insertIntoIndex(index, g, g.left.id)
+			insertIntoIndex(index, g, g.right.id)
+		}
+	}
+	return
+}
+
+func insertIntoIndex(index map[string][]*gate, g *gate, id string) {
+	_, ok := index[id]
+	if !ok {
+		index[id] = []*gate{}
+	}
+	index[id] = append(index[id], g)
+}
+
+func (m *machine) checkAllXY(index map[string][]*gate) {
+	for i, a := range m.adders {
+		x := a.getXid()
+		y := a.getYid()
+		xor1, and1 := m.checkXY(index, x)
+		xor2, and2 := m.checkXY(index, y)
+		if xor1 != xor2 {
+			panic(fmt.Sprintf("Adder of %v and %v is bad, the XOR gates of the wires are different.", x, y))
+		}
+		if and1 != and2 {
+			panic(fmt.Sprintf("Adder of %v and %v is bad, the AND gates of the wires are different.", x, y))
+		}
+		a.x = x
+		a.y = y
+		a.e = xor1.id
+		a.f = and1.id
+		if i == 0 {
+			a.z = xor1.id
+			a.cout = and1.id
+			a.c = " 0 "
+			a.g = " 0 "
+		}
+		m.adders[i] = a
+	}
+}
+
+func (m *machine) checkXY(index map[string][]*gate, id string) (xor, and *gate) {
+	deps, ok := index[id]
+	if !ok {
+		panic(fmt.Sprintf("Wire %v is bad, there is no gate depending on this wire!", id))
+	}
+	if len(deps) != 2 {
+		panic(fmt.Sprintf("Wire %v is bad, there are more than 2 gates are depending on this wire!", id))
+	}
+	if deps[0].opStr != "XOR" && deps[1].opStr != "XOR" {
+		panic(fmt.Sprintf("Wire %v is bad, there is no XOR gate depending on this wire!", id))
+	}
+	if deps[0].opStr != "AND" && deps[1].opStr != "AND" {
+		panic(fmt.Sprintf("Wire %v is bad, there is no XOR gate depending on this wire!", id))
+	}
+	if deps[0].opStr == "XOR" {
+		return deps[0], deps[1]
+	}
+	return deps[1], deps[0]
 }

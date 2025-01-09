@@ -102,8 +102,6 @@ func TestSolution(t *testing.T) {
 	for k := range r {
 		a.Equal(r[k], m.gates[k].value, "value of %v is bad", k)
 	}
-
-	a.Equal(0, solvePuzzle2(m))
 }
 
 func TestRealSolution(t *testing.T) {
