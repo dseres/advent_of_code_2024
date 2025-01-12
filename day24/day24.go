@@ -17,15 +17,15 @@ type machine struct {
 	values map[string]int
 	gates  map[string]*gate
 	adders []adder
-	deps   map[string][]*gate
 }
 
 type gate struct {
 	id          string
 	value       int
-	op          opFun
-	opStr       string
+	fun         opFun
+	op          string
 	left, right *gate
+	parents     []*gate
 	computed    bool
 }
 
@@ -95,20 +95,23 @@ func parseGates(input string) map[string]*gate {
 		}
 		g := gates[id]
 		g.id = id
-		g.op = parseOp(op)
-		g.opStr = op
+		g.fun = parseOp(op)
+		g.op = op
 		if l, ok := gates[leftId]; ok {
 			g.left = l
 		} else {
-			g.left = &gate{id: leftId}
+			g.left = &gate{id: leftId, parents: make([]*gate, 0)}
 			gates[leftId] = g.left
 		}
+		g.left.parents = append(g.left.parents, g)
 		if l, ok := gates[rightId]; ok {
 			g.right = l
 		} else {
-			g.right = &gate{id: rightId}
+			g.right = &gate{id: rightId, parents: make([]*gate, 0)}
 			gates[rightId] = g.right
 		}
+		g.right.parents = append(g.right.parents, g)
+		gates[id] = g
 	}
 	return gates
 }
@@ -133,6 +136,10 @@ func parseOp(input string) opFun {
 }
 
 func (m *machine) loadInput() {
+	for _, g := range m.gates {
+		g.computed = false
+		g.value = 0
+	}
 	for k, v := range m.values {
 		g := m.gates[k]
 		g.value = v
@@ -145,22 +152,26 @@ func (m machine) String() string {
 	b.WriteString(fmt.Sprintf("X: %*b\n", m.bits+1, m.getX()))
 	b.WriteString(fmt.Sprintf("Y: %*b\n", m.bits+1, m.getY()))
 	b.WriteString(fmt.Sprintf("Z: %-*b\n", m.bits+1, m.getZ()))
-	b.WriteString("Rules:")
+	b.WriteString("Rules:\n")
 	for _, g := range m.gates {
-		if g.op == nil {
-			b.WriteString(fmt.Sprintf("\t%v (%v) %v\n", g.id, g.value, g))
-			continue
-		}
-		b.WriteString(fmt.Sprintf("\t%v (%v) %v %v (%v) -> %v (%v) %v\n", g.left.id, g.left.value, g.opStr, g.right.id, g.right.value, g.id, g.value, g))
+		b.WriteString(fmt.Sprintln(g))
+	}
+	b.WriteString("\n")
+	for _, a := range m.adders {
+		b.WriteString(fmt.Sprintln(a))
 	}
 	return b.String()
 }
 
 func (g gate) String() string {
-	if g.left != nil && g.right != nil && g.op != nil {
-		return fmt.Sprintf("{%v (%v) %v %v (%v) -> %v (%v)}", g.left.id, g.left.value, g.opStr, g.right.id, g.right.value, g.id, g.value)
+	if !g.isInput() {
+		return fmt.Sprintf("{%v (%v) %v %v (%v) -> %v (%v)}", g.left.id, g.left.value, g.op, g.right.id, g.right.value, g.id, g.value)
 	}
 	return fmt.Sprintf("{%v (%v)}", g.id, g.value)
+}
+
+func (g gate) isInput() bool {
+	return g.fun == nil
 }
 
 func (a adder) String() string {
@@ -176,16 +187,14 @@ func solvePuzzle1(m machine) int {
 			n = n | (g.value << g.bitNo())
 		}
 	}
-	// fmt.Println(m)
 	return n
 }
 
 func (m *machine) compute(g *gate) {
-	// fmt.Printf("Computing %v from %v and %v\n", g, g.left, g.right)
-	if !g.computed && g.left != nil && g.right != nil && g.op != nil {
+	if !g.computed && !g.isInput() {
 		m.compute(g.left)
 		m.compute(g.right)
-		g.value = g.op(g.left.value, g.right.value)
+		g.value = g.fun(g.left.value, g.right.value)
 	}
 	g.computed = true
 }
@@ -203,13 +212,11 @@ func (g gate) bitNo() int {
 
 func solvePuzzle2(m machine) string {
 	m.buildAdders()
-	m.createDependantIndex()
 	badWires := m.checkAdders()
 	slices.Sort(badWires)
-	// for _, g := range m.gates {
-	// 	g.computed = false
-	// }
+	// m.loadInput()
 	// solvePuzzle1(m)
+	fmt.Println(m)
 	return strings.Join(badWires, ",")
 }
 
@@ -250,25 +257,6 @@ func (a adder) getXid() string {
 
 func (a adder) getYid() string {
 	return fmt.Sprintf("y%02d", a.id)
-}
-
-// createDependantIndex will show which gates depends on a wire
-func (m *machine) createDependantIndex() {
-	m.deps = make(map[string][]*gate)
-	for _, g := range m.gates {
-		if g.left != nil && g.right != nil {
-			m.insertIntoIndex(g, g.left.id)
-			m.insertIntoIndex(g, g.right.id)
-		}
-	}
-}
-
-func (m *machine) insertIntoIndex(g *gate, id string) {
-	_, ok := m.deps[id]
-	if !ok {
-		m.deps[id] = []*gate{}
-	}
-	m.deps[id] = append(m.deps[id], g)
 }
 
 func (m *machine) checkAdders() (badWires []string) {
@@ -420,62 +408,52 @@ func (m *machine) computeCOUTwire(a adder) (cout string, badWires []string) {
 }
 
 func (m *machine) checkXORANDDeps(w string) (xor, and *gate, ok bool) {
-	deps, ok := m.deps[w]
-	if !ok {
-		return nil, nil, false
+	g := m.gates[w]
+	if len(g.parents) == 2 && g.parents[0].op == "XOR" && g.parents[1].op == "AND" {
+		return g.parents[0], g.parents[1], true
 	}
-	if len(deps) == 1 {
-		return nil, nil, false
+	if len(g.parents) == 2 && g.parents[0].op == "AND" && g.parents[1].op == "XOR" {
+		return g.parents[1], g.parents[0], true
 	}
-	if len(deps) != 2 {
-		return nil, nil, false
-	}
-	if deps[0].opStr != "XOR" && deps[1].opStr != "XOR" {
-		return nil, nil, false
-	}
-	if deps[0].opStr != "AND" && deps[1].opStr != "AND" {
-		return nil, nil, false
-	}
-	if deps[0].opStr == "XOR" {
-		return deps[0], deps[1], true
-	}
-	return deps[1], deps[0], true
+	return nil, nil, false
 }
 
 func (m *machine) checkORDeps(w string) (or *gate, ok bool) {
-	deps, ok := m.deps[w]
-	if !ok {
-		return nil, false
+	g := m.gates[w]
+	if len(g.parents) == 1 && g.parents[0].op == "OR" {
+		return g.parents[0], true
 	}
-	if len(deps) != 1 {
-		return nil, false
-	}
-	if deps[0].opStr != "OR" {
-		return nil, false
-	}
-	return deps[0], true
+	return nil, false
 }
 
 func (m *machine) change(w1, w2 string) {
 	g1, g2 := m.gates[w1], m.gates[w2]
-	g1.id, g2.id = g2.id, g1.id
-	m.gates[g1.id], m.gates[g2.id] = g1, g2
-	for _, g := range m.deps[w1] {
-		if g.left == g1 {
-			g.left = g2
+	g1.op, g2.op = g2.op, g1.op
+	g1.fun, g2.fun = g2.fun, g1.fun
+	g1.left, g2.left = g2.left, g1.left
+	g1.right, g2.right = g2.right, g1.right
+	if !slices.Equal(g1.left.parents, g2.left.parents) {
+		for i := range g1.left.parents {
+			if g1.left.parents[i] == g2 {
+				g1.left.parents[i] = g1
+			}
 		}
-		if g.right == g1 {
-			g.right = g2
-		}
-	}
-	for _, g := range m.deps[w2] {
-		if g.left == g2 {
-			g.left = g1
-		}
-		if g.right == g2 {
-			g.right = g1
+		for i := range g2.left.parents {
+			if g2.left.parents[i] == g1 {
+				g2.left.parents[i] = g2
+			}
 		}
 	}
-	g1.computed, g2.computed = false, false
-	m.createDependantIndex()
+	if !slices.Equal(g1.right.parents, g2.right.parents) {
+		for i := range g1.right.parents {
+			if g1.right.parents[i] == g2 {
+				g1.right.parents[i] = g1
+			}
+		}
+		for i := range g2.right.parents {
+			if g2.right.parents[i] == g1 {
+				g2.right.parents[i] = g2
+			}
+		}
+	}
 }
