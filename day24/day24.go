@@ -214,9 +214,8 @@ func solvePuzzle2(m machine) string {
 	m.buildAdders()
 	badWires := m.checkAdders()
 	slices.Sort(badWires)
-	// m.loadInput()
-	// solvePuzzle1(m)
-	fmt.Println(m)
+	m.loadInput()
+	solvePuzzle1(m)
 	return strings.Join(badWires, ",")
 }
 
@@ -233,7 +232,7 @@ func (m machine) getX() int {
 }
 
 func (m machine) getY() int {
-	return m.getValue("x")
+	return m.getValue("y")
 }
 
 func (m machine) getZ() int {

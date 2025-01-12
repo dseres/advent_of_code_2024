@@ -109,10 +109,5 @@ func TestRealSolution(t *testing.T) {
 	a.Equal(51107420031718, solvePuzzle1(m))
 
 	a.Equal("cpm,ghp,gpr,krs,nks,z10,z21,z33", solvePuzzle2(m))
-
-	// fmt.Printf(" %45b\n", m.getX())
-	// fmt.Printf(" %45b\n", m.getY())
-	// fmt.Printf("%46b\n", m.getX()+m.getY())
-	// fmt.Printf("%46b\n", m.getZ())
-	// a.Equal(m.getZ(), m.getX()+m.getY())
+	a.Equal(m.getZ(), m.getX()+m.getY())
 }
