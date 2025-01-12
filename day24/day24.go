@@ -118,17 +118,14 @@ func parseOp(input string) opFun {
 	switch input {
 	case "AND":
 		op = func(a, b int) int {
-			// fmt.Printf("%v AND %v -> %v\n", a, b, a&b)
 			return a & b
 		}
 	case "OR":
 		op = func(a, b int) int {
-			// fmt.Printf("%v OR %v -> %v\n", a, b, a|b)
 			return a | b
 		}
 	case "XOR":
 		op = func(a, b int) int {
-			// fmt.Printf("%v XOR %v -> %v\n", a, b, a^b)
 			return a ^ b
 		}
 	}
@@ -160,7 +157,7 @@ func (m machine) String() string {
 }
 
 func (g gate) String() string {
-	if g.left != nil && g.right != nil {
+	if g.left != nil && g.right != nil && g.op != nil {
 		return fmt.Sprintf("{%v (%v) %v %v (%v) -> %v (%v)}", g.left.id, g.left.value, g.opStr, g.right.id, g.right.value, g.id, g.value)
 	}
 	return fmt.Sprintf("{%v (%v)}", g.id, g.value)
@@ -205,11 +202,14 @@ func (g gate) bitNo() int {
 }
 
 func solvePuzzle2(m machine) string {
-	fmt.Println("bits: ", m.bits)
 	m.buildAdders()
 	m.createDependantIndex()
 	badWires := m.checkAdders()
 	slices.Sort(badWires)
+	// for _, g := range m.gates {
+	// 	g.computed = false
+	// }
+	// solvePuzzle1(m)
 	return strings.Join(badWires, ",")
 }
 
@@ -244,21 +244,12 @@ func (m machine) getValue(prefix string) int {
 	return v
 }
 
-// func (m machine) clone() (other machine) {
-// 	other.bits = m.bits
-// 	other.gates = maps.Clone(m.gates)
-// 	other.values = maps.Clone(m.values)
-// 	return
-// }
-
 func (a adder) getXid() string {
 	return fmt.Sprintf("x%02d", a.id)
 }
+
 func (a adder) getYid() string {
 	return fmt.Sprintf("y%02d", a.id)
-}
-func (a adder) getZid() string {
-	return fmt.Sprintf("z%02d", a.id)
 }
 
 // createDependantIndex will show which gates depends on a wire
@@ -270,7 +261,6 @@ func (m *machine) createDependantIndex() {
 			m.insertIntoIndex(g, g.right.id)
 		}
 	}
-	return
 }
 
 func (m *machine) insertIntoIndex(g *gate, id string) {
@@ -279,19 +269,6 @@ func (m *machine) insertIntoIndex(g *gate, id string) {
 		m.deps[id] = []*gate{}
 	}
 	m.deps[id] = append(m.deps[id], g)
-}
-
-func (m *machine) checkAllZ() (badWires []string) {
-	for _, a := range m.adders {
-		z := a.getZid()
-		deps, ok := m.deps[z]
-		if ok && len(deps) > 0 {
-			fmt.Printf("Wire %v is bad. A Z wire should be output and no other wire should depend on it.", z)
-			fmt.Printf("Depending gates: %v", deps)
-			badWires = append(badWires, z)
-		}
-	}
-	return
 }
 
 func (m *machine) checkAdders() (badWires []string) {
@@ -318,32 +295,29 @@ func (m *machine) checkFirstAdder() (badWires []string) {
 	a.x = a.getXid()
 	a.y = a.getYid()
 	a.c = " 0 "
+	a.g = a.c
 	// Check XOR and AND gates from X, Y
-	xXOR, xAND, _ := m.checkXORANDDeps(a.x)
-	yXOR, yAND, _ := m.checkXORANDDeps(a.y)
+	z1, cout1, _ := m.checkXORANDDeps(a.x)
+	z2, cout2, _ := m.checkXORANDDeps(a.y)
 	// Compare gates
-	if xXOR != yXOR {
-		fmt.Printf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.x, a.y, xXOR, yXOR)
+	if z1 != z2 {
+		panic(fmt.Sprintf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.x, a.y, z1, z2))
 	}
-	if xAND != yAND {
-		fmt.Printf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.x, a.y, xAND, yAND)
+	if cout1 != cout2 {
+		panic(fmt.Sprintf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.x, a.y, cout1, cout2))
 	}
 	// Check there is no 'z' in E and F wires
-	if !strings.HasPrefix(xXOR.id, "z") {
-		fmt.Printf("Wire %v is in bad position.\n", xXOR.id)
-		badWires = append(badWires, xXOR.id)
+	if !strings.HasPrefix(z1.id, "z") {
+		badWires = append(badWires, z1.id)
 	}
-	if strings.HasPrefix(xAND.id, "z") {
-		fmt.Printf("Wire %v is in bad position.\n", xAND.id)
-		badWires = append(badWires, xAND.id)
+	if strings.HasPrefix(cout1.id, "z") {
+		badWires = append(badWires, cout1.id)
 	}
-	a.e = xXOR.id
-	a.f = xAND.id
-	a.z = a.e
-	a.g = a.c
-	a.cout = a.f
+	a.e = z1.id
+	a.f = cout1.id
+	a.z = z1.id
+	a.cout = cout1.id
 	m.adders[a.id] = a
-	fmt.Println(a)
 	return
 }
 
@@ -352,109 +326,114 @@ func (m *machine) checkAdder(a adder) (badWires []string) {
 	a.x = a.getXid()
 	a.y = a.getYid()
 	a.c = m.adders[a.id-1].cout
+	var bw []string
 	// Check XOR and AND gates from X, Y
-	xXOR, xAND, ok := m.checkXORANDDeps(a.x)
-	yXOR, yAND, ok := m.checkXORANDDeps(a.y)
-	// Compare gates
-	if xXOR != yXOR {
-		fmt.Printf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.x, a.y, xXOR, yXOR)
-	}
-	if xAND != yAND {
-		fmt.Printf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.x, a.y, xAND, yAND)
-	}
-	// Check there is no 'z' in E and F wires
-	if strings.HasPrefix(xXOR.id, "z") {
-		fmt.Printf("Wire %v is in bad position.\n", xXOR.id)
-		badWires = append(badWires, xXOR.id)
-	}
-	if strings.HasPrefix(xAND.id, "z") {
-		fmt.Printf("Wire %v is in bad position.\n", xAND.id)
-		badWires = append(badWires, xAND.id)
-	}
-	a.e = xXOR.id
-	a.f = xAND.id
+	a.e, a.f, bw = m.computeEandFwires(a)
+	badWires = append(badWires, bw...)
 
 	// Check XOR and AND gates from E and C
-	fmt.Println(a)
-	eXOR, eAND, ok := m.checkXORANDDeps(a.e)
-	if !ok {
-		badWires = append(badWires, a.e)
-	} else {
-		cXOR, cAND, ok := m.checkXORANDDeps(a.c)
-		if !ok {
-			badWires = append(badWires, a.c)
-		} else {
-			// Compare gates
-			if eXOR != cXOR {
-				fmt.Printf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.e, a.c, eXOR, cXOR)
-			}
-			if eAND != cAND {
-				fmt.Printf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.e, a.c, eAND, cAND)
-			}
-			if !strings.HasPrefix(eXOR.id, "z") {
-				fmt.Printf("Wire %v is in bad position.\n", eXOR.id)
-				badWires = append(badWires, eXOR.id)
-			}
-			if strings.HasPrefix(eAND.id, "z") {
-				fmt.Printf("Wire %v is in bad position.\n", eAND.id)
-				badWires = append(badWires, eAND.id)
-			}
-			a.z = eXOR.id
-			a.g = eAND.id
-			if len(badWires) == 2 {
-				m.adders[a.id] = a
-				return badWires
-			}
-		}
+	a.z, a.g, bw = m.computeZandGwires(a)
+	badWires = append(badWires, bw...)
+	if len(badWires) == 2 {
+		m.adders[a.id] = a
+		return badWires
 	}
 
 	// Check OR gates from F and G
-	fmt.Println(a)
-	fOR, ok := m.checkORDeps(a.f)
-	if !ok {
-		badWires = append(badWires, a.f)
-	} else {
-		gOR, ok := m.checkORDeps(a.g)
-		if !ok {
-			badWires = append(badWires, a.g)
-		} else {
-			// Compare gates
-			if fOR != gOR {
-				fmt.Printf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.f, a.g, fOR, gOR)
-			}
-			if strings.HasPrefix(fOR.id, "z") && a.id < 44 {
-				fmt.Printf("Wire %v is in bad position.", fOR.id)
-				badWires = append(badWires, fOR.id)
-			}
-			a.cout = fOR.id
-			m.adders[a.id] = a
-		}
-	}
-	fmt.Println(a)
+	a.cout, bw = m.computeCOUTwire(a)
+	badWires = append(badWires, bw...)
+	m.adders[a.id] = a
 	return
+}
+
+func (m *machine) computeEandFwires(a adder) (e, f string, bads []string) {
+	e1, f1, ok := m.checkXORANDDeps(a.x)
+	if !ok {
+		panic(fmt.Sprintf("wire %v is bad", a.x))
+	}
+	e2, f2, ok := m.checkXORANDDeps(a.y)
+	if !ok {
+		panic(fmt.Sprintf("wire %v is bad", a.y))
+	}
+	// Compare gates
+	if e1 != e2 {
+		panic(fmt.Sprintf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.x, a.y, e1, e2))
+	}
+	if f1 != f2 {
+		panic(fmt.Sprintf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.x, a.y, f1, f2))
+	}
+	// Check there is no 'z' in E and F wires
+	if strings.HasPrefix(e1.id, "z") {
+		bads = append(bads, e1.id)
+	}
+	if strings.HasPrefix(f1.id, "z") {
+		bads = append(bads, f1.id)
+	}
+	return e1.id, f1.id, bads
+}
+
+func (m *machine) computeZandGwires(a adder) (z, g string, bads []string) {
+	z1, g1, ok := m.checkXORANDDeps(a.e)
+	if !ok {
+		return "", "", []string{a.e}
+	}
+	z2, g2, ok := m.checkXORANDDeps(a.c)
+	if !ok {
+		return "", "", []string{a.c}
+	}
+	// Compare gates
+	if z1 != z2 {
+		panic(fmt.Sprintf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.e, a.c, z1, z2))
+	}
+	if g1 != g2 {
+		panic(fmt.Sprintf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.e, a.c, g1, g2))
+	}
+	if !strings.HasPrefix(z1.id, "z") {
+		bads = append(bads, z1.id)
+	}
+	if strings.HasPrefix(g1.id, "z") {
+		bads = append(bads, g1.id)
+	}
+	return z1.id, g1.id, bads
+}
+
+func (m *machine) computeCOUTwire(a adder) (cout string, badWires []string) {
+	cout1, ok := m.checkORDeps(a.f)
+	if !ok {
+		return "", []string{a.f}
+	}
+	cout2, ok := m.checkORDeps(a.g)
+	if !ok {
+		return "", []string{a.g}
+	}
+	// Compare gates
+	if cout1 != cout2 {
+		panic(fmt.Sprintf("Wires %v or %v are bad, they have different dependants: %v, %v\n", a.f, a.g, cout1, cout2))
+	}
+	// The carry bit of last gate will be the last z wire
+	if strings.HasPrefix(cout1.id, "z") && a.id < m.bits-1 {
+		badWires = append(badWires, cout1.id)
+	}
+	a.cout = cout1.id
+	m.adders[a.id] = a
+	return cout1.id, badWires
 }
 
 func (m *machine) checkXORANDDeps(w string) (xor, and *gate, ok bool) {
 	deps, ok := m.deps[w]
-	fmt.Println(w, deps)
 	if !ok {
-		fmt.Printf("Wire %v is bad, there is no gate depending on this wire!\n", w)
 		return nil, nil, false
 	}
 	if len(deps) == 1 {
-		fmt.Printf("Wire %v is bad, there is only 1 gate depending on this wire!\n", w)
 		return nil, nil, false
 	}
 	if len(deps) != 2 {
-		fmt.Printf("Wire %v is bad, there are more than 2 gates depending on this wire!\n", w)
 		return nil, nil, false
 	}
 	if deps[0].opStr != "XOR" && deps[1].opStr != "XOR" {
-		fmt.Printf("Wire %v is bad, there is no XOR gate depending on this wire!\n", w)
 		return nil, nil, false
 	}
 	if deps[0].opStr != "AND" && deps[1].opStr != "AND" {
-		fmt.Printf("Wire %v is bad, there is no XOR gate depending on this wire!\n", w)
 		return nil, nil, false
 	}
 	if deps[0].opStr == "XOR" {
@@ -465,28 +444,21 @@ func (m *machine) checkXORANDDeps(w string) (xor, and *gate, ok bool) {
 
 func (m *machine) checkORDeps(w string) (or *gate, ok bool) {
 	deps, ok := m.deps[w]
-	fmt.Println(w, deps)
 	if !ok {
-		fmt.Printf("Wire %v is bad, there is no gate depending on this wire!\n", w)
 		return nil, false
 	}
 	if len(deps) != 1 {
-		fmt.Printf("Wire %v is bad, there are more than 1 gates are depending on this wire!\n", w)
 		return nil, false
 	}
 	if deps[0].opStr != "OR" {
-		fmt.Printf("Wire %v is bad, there is no OR gate depending on this wire!\n", w)
 		return nil, false
 	}
 	return deps[0], true
 }
 
 func (m *machine) change(w1, w2 string) {
-	fmt.Println("Changeing wires ", w1, w2)
 	g1, g2 := m.gates[w1], m.gates[w2]
-	fmt.Println(g1, g2)
 	g1.id, g2.id = g2.id, g1.id
-	fmt.Println(g1, g2)
 	m.gates[g1.id], m.gates[g2.id] = g1, g2
 	for _, g := range m.deps[w1] {
 		if g.left == g1 {
@@ -505,7 +477,5 @@ func (m *machine) change(w1, w2 string) {
 		}
 	}
 	g1.computed, g2.computed = false, false
-	m.compute(g1)
-	m.compute(g2)
 	m.createDependantIndex()
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -108,13 +107,11 @@ func TestRealSolution(t *testing.T) {
 	m := new(input)
 	a := assert.New(t)
 	a.Equal(51107420031718, solvePuzzle1(m))
+
+	// solvePuzzle2(m)
+	// fmt.Printf(" %45b\n", m.getX())
+	// fmt.Printf(" %45b\n", m.getY())
+	// fmt.Printf("%46b\n", m.getX()+m.getY())
+	// fmt.Printf("%46b\n", m.getZ())
+	// a.Equal(m.getZ(), m.getX()+m.getY())
 }
-
-// func BenchmarkCompute(b *testing.B) {
-// 	m := new(input)
-// 	for range b.N {
-// 		m2 := m.clone()
-// 		solvePuzzle1(m2)
-// 	}
-
-// }
