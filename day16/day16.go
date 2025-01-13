@@ -7,16 +7,19 @@ import (
 	"image"
 	"math"
 	_ "slices"
+	"time"
 )
 
 //go:embed input16.txt
 var input string
 
 func main() {
+	start := time.Now()
 	maze := parseInput(input)
 	dist, count := solvePuzzle(maze)
-	fmt.Println("Day07 solution1:", dist)
-	fmt.Println("Day07 solution2:", count)
+	fmt.Println("Day16 solution1:", dist)
+	fmt.Println("Day16 solution2:", count)
+	fmt.Println("Day16 time:", time.Now().Sub(start))
 }
 
 func parseInput(input string) [][]byte {

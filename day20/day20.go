@@ -8,16 +8,19 @@ import (
 	"math"
 	"slices"
 	"strings"
+	"time"
 )
 
 //go:embed input20.txt
 var input string
 
 func main() {
+	start := time.Now()
 	m := new(input)
 	m.findPath()
-	fmt.Println("Day07 solution1:", m.countShortcuts(100, 2))
-	fmt.Println("Day07 solution2:", m.countShortcuts(100, 20))
+	fmt.Println("Day20 solution1:", m.countShortcuts(100, 2))
+	fmt.Println("Day20 solution2:", m.countShortcuts(100, 20))
+	fmt.Println("Day20 time:", time.Now().Sub(start))
 }
 
 const (

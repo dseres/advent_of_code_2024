@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed input24.txt
@@ -54,9 +55,11 @@ type adder struct {
 }
 
 func main() {
+	start := time.Now()
 	m := new(input)
-	fmt.Println("Day07 solution1:", solvePuzzle1(m))
-	fmt.Println("Day07 solution2:", solvePuzzle2(m))
+	fmt.Println("Day24 solution1:", solvePuzzle1(m))
+	fmt.Println("Day24 solution2:", solvePuzzle2(m))
+	fmt.Println("Day24 time:", time.Now().Sub(start))
 }
 
 func new(input string) machine {

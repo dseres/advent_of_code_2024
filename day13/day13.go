@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed input13.txt
@@ -20,10 +21,12 @@ const (
 )
 
 func main() {
+	start := time.Now()
 	cms := parseInput(input)
-	fmt.Println("Day07 solution1:", solvePuzzle(cms, getMinBruteForce))
+	fmt.Println("Day13 solution1:", solvePuzzle(cms, getMinBruteForce))
 	increasePrizes(cms)
-	fmt.Println("Day07 solution2:", solvePuzzle(cms, getMinUsingEquations))
+	fmt.Println("Day13 solution2:", solvePuzzle(cms, getMinUsingEquations))
+	fmt.Println("Day13 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle(cms []clawMachine, getMin func(clawMachine) (int, bool)) int {

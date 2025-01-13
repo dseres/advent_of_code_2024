@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"strconv"
+	"time"
 )
 
 //go:embed input09.txt
@@ -16,10 +17,12 @@ type group struct {
 const SPACE = int16(-1)
 
 func main() {
+	start := time.Now()
 	blocks := toBlocks(parseInput(input))
-	fmt.Println("Day07 solution1:", solvePuzzle1(blocks))
+	fmt.Println("Day09 solution1:", solvePuzzle1(blocks))
 	blocks = toBlocks(parseInput(input))
-	fmt.Println("Day07 solution2:", solvePuzzle2(blocks))
+	fmt.Println("Day09 solution2:", solvePuzzle2(blocks))
+	fmt.Println("Day09 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(blocks []int16) int {

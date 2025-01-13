@@ -6,6 +6,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed input21.txt
@@ -24,9 +25,11 @@ type key struct {
 var cache map[key]int = make(map[key]int)
 
 func main() {
+	start := time.Now()
 	codes := parseInput(input)
-	fmt.Println("Day07 solution1:", solvePuzzle(codes, 2))
-	fmt.Println("Day07 solution2:", solvePuzzle(codes, 25))
+	fmt.Println("Day21 solution1:", solvePuzzle(codes, 2))
+	fmt.Println("Day21 solution2:", solvePuzzle(codes, 25))
+	fmt.Println("Day21 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle(codes []string, level int) int {

@@ -5,6 +5,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var input string = "64599 31 674832 2659361 1 0 8867 321"
@@ -16,9 +17,11 @@ type elem struct {
 var cache map[elem]int = make(map[elem]int, 0)
 
 func main() {
+	start := time.Now()
 	nums := parseInput(input)
-	fmt.Println("Day07 solution1:", solvePuzzle(nums, 25))
-	fmt.Println("Day07 solution2:", solvePuzzle(nums, 75))
+	fmt.Println("Day11 solution1:", solvePuzzle(nums, 25))
+	fmt.Println("Day11 solution2:", solvePuzzle(nums, 75))
+	fmt.Println("Day11 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle(nums []int, round int) int {

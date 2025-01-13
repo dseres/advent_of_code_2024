@@ -6,15 +6,18 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed input02.txt
 var input string
 
 func main() {
+	start := time.Now()
 	reports := parseInput(input)
 	fmt.Println("Day02 solution1:", solvePuzzle1(reports))
 	fmt.Println("Day02 solution2:", solvePuzzle2(reports))
+	fmt.Println("Day02 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(reports [][]int) (count int64) {

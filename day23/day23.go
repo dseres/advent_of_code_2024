@@ -7,6 +7,7 @@ import (
 	"math"
 	"slices"
 	"strings"
+	"time"
 )
 
 //go:embed input23.txt
@@ -17,10 +18,12 @@ type trio struct{ a, b, c int16 }
 type set = map[int16]struct{}
 
 func main() {
+	start := time.Now()
 	g := parseInput(input)
 	cliques := getSortedCliques(g)
-	fmt.Println("Day07 solution1:", solvePuzzle1(cliques))
-	fmt.Println("Day07 solution2:", solvePuzzle2(cliques))
+	fmt.Println("Day23 solution1:", solvePuzzle1(cliques))
+	fmt.Println("Day23 solution2:", solvePuzzle2(cliques))
+	fmt.Println("Day23 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(cliques [][]int16) int {

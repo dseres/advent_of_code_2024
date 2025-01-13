@@ -5,16 +5,19 @@ import (
 	_ "embed"
 	"fmt"
 	"image"
+	"time"
 )
 
 //go:embed input15.txt
 var input string
 
 func main() {
+	start := time.Now()
 	wh := newWarehouse(input)
-	fmt.Println("Day07 solution1:", solvePuzzle1(wh))
+	fmt.Println("Day15 solution1:", solvePuzzle1(wh))
 	wh = newWarehouse(input)
-	fmt.Println("Day07 solution2:", solvePuzzle2(wh))
+	fmt.Println("Day15 solution2:", solvePuzzle2(wh))
+	fmt.Println("Day15 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(wh warehouse) int {

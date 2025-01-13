@@ -7,15 +7,18 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed input18.txt
 var input string
 
 func main() {
+	start := time.Now()
 	m := new(input, 70, 1024)
-	fmt.Println("Day07 solution1:", m.findPath())
-	fmt.Println("Day07 solution2:", m.addMoreBarriers())
+	fmt.Println("Day18 solution1:", m.findPath())
+	fmt.Println("Day18 solution2:", m.addMoreBarriers())
+	fmt.Println("Day18 time:", time.Now().Sub(start))
 }
 
 type point = image.Point

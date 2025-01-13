@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 	_ "time"
 )
 
@@ -19,11 +20,13 @@ type robot struct {
 }
 
 func main() {
+	start := time.Now()
 	robots := parseInput(input)
 	width, height := getDimension(robots)
 	robots2 := slices.Clone(robots)
-	fmt.Println("Day07 solution1:", solvePuzzle1(width, height, robots))
-	fmt.Println("Day07 solution2:", solvePuzzle2(width, height, robots2))
+	fmt.Println("Day14 solution1:", solvePuzzle1(width, height, robots))
+	fmt.Println("Day14 solution2:", solvePuzzle2(width, height, robots2))
+	fmt.Println("Day14 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(w, h int, robots []robot) int {

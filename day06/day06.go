@@ -8,6 +8,7 @@ import (
 	"image"
 	_ "os"
 	"slices"
+	"time"
 )
 
 //go:embed input06.txt
@@ -16,8 +17,10 @@ var input string
 var directions []image.Point = []image.Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
 
 func main() {
+	start := time.Now()
 	fmt.Println("Day06 solution1:", solvePuzzle1(parseInput(input)))
 	fmt.Println("Day06 solution2:", solvePuzzle2(parseInput(input)))
+	fmt.Println("Day06 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(lab [][]byte, pos image.Point) int {

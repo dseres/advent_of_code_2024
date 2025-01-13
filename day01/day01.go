@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 )
 
 //go:embed input01.txt
 var input string
 
 func main() {
+	start := time.Now()
 	nums1, nums2 := parseInput(input)
 	fmt.Println("Day01 solution1:", solvePuzzle1(nums1, nums2))
 	fmt.Println("Day01 solution2:", solvePuzzle2WithMap(nums1, nums2))
+	fmt.Println("Day01 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(nums1 []int, nums2 []int) (diff int64) {

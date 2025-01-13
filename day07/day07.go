@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed input07.txt
@@ -20,9 +21,11 @@ const (
 )
 
 func main() {
+	start := time.Now()
 	nums := parseInput(input)
 	fmt.Println("Day07 solution1:", solvePuzzle1(nums))
 	fmt.Println("Day07 solution2:", solvePuzzle2(nums))
+	fmt.Println("Day07 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(nums [][]int) int {

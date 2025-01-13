@@ -6,16 +6,19 @@ import (
 	"image"
 	"slices"
 	"strings"
+	"time"
 )
 
 //go:embed input12.txt
 var input string
 
 func main() {
+	start := time.Now()
 	garden := newGarden(input)
 	// fmt.Println(garden)
 	fmt.Println("Day12 solution1:", solvePuzzle1(garden))
 	fmt.Println("Day12 solution2:", solvePuzzle2(garden))
+	fmt.Println("Day12 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(g garden) int {

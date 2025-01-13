@@ -5,14 +5,17 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 //go:embed input03.txt
 var input string
 
 func main() {
+	start := time.Now()
 	fmt.Println("Day03 solution1:", solvePuzzle1(input))
 	fmt.Println("Day03 solution2:", solvePuzzle2(input))
+	fmt.Println("Day03 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(input string) (sum int64) {

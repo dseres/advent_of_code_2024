@@ -1,16 +1,20 @@
 package main
 
-import "fmt"
-import _ "embed"
-import "strings"
+import (
+	_ "embed"
+	"fmt"
+	"strings"
+	"time"
+)
 
 //go:embed input25.txt
 var input string
 
 func main() {
+	start := time.Now()
 	locks, keys := parseInput(input)
-	fmt.Println("Day07 solution1:", solvePuzzle1(locks, keys))
-	fmt.Println("Day07 solution2:", solvePuzzle2(locks, keys))
+	fmt.Println("Day25 solution1:", solvePuzzle1(locks, keys))
+	fmt.Println("Day25 time:", time.Now().Sub(start))
 }
 
 func parseInput(input string) (locks [][]int, keys [][]int) {
@@ -74,8 +78,4 @@ func match(lock, key []int) bool {
 		}
 	}
 	return true
-}
-
-func solvePuzzle2(locks [][]int, keys [][]int) int {
-	return 0
 }

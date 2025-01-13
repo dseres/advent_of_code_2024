@@ -4,15 +4,18 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"time"
 )
 
 //go:embed input04.txt
 var input []byte
 
 func main() {
+	start := time.Now()
 	text := parseInput(input)
 	fmt.Println("Day04 solution1:", solvePuzzle1(text))
 	fmt.Println("Day04 solution2:", solvePuzzle2(text))
+	fmt.Println("Day04 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(text [][]byte) (counter int) {

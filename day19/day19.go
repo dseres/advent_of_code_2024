@@ -5,16 +5,19 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 )
 
 //go:embed input19.txt
 var input string
 
 func main() {
+	start := time.Now()
 	patterns, strs := parseInput(input)
 	count1, count2 := solve(patterns, strs)
-	fmt.Println("Day07 solution1:", count1)
-	fmt.Println("Day07 solution2:", count2)
+	fmt.Println("Day19 solution1:", count1)
+	fmt.Println("Day19 solution2:", count2)
+	fmt.Println("Day19 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(patterns []string, strs []string) int {

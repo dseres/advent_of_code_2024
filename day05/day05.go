@@ -6,16 +6,19 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed input05.txt
 var input string
 
 func main() {
+	start := time.Now()
 	ordering, rules := parseInput(input)
 	p := newPrinter(ordering)
 	fmt.Println("Day05 solution1:", solvePuzzle1(p, rules))
 	fmt.Println("Day05 solution2:", solvePuzzle2(p, rules))
+	fmt.Println("Day05 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(p *printer, rules [][]int) (sum int) {

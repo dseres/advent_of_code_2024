@@ -7,15 +7,18 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //go:embed input17.txt
 var input string
 
 func main() {
+	start := time.Now()
 	m := new(input)
-	fmt.Println("Day07 solution1:", solvePuzzle1(m))
-	fmt.Println("Day07 solution2:", solvePuzzle2(m))
+	fmt.Println("Day17 solution1:", solvePuzzle1(m))
+	fmt.Println("Day17 solution2:", solvePuzzle2(m))
+	fmt.Println("Day17 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle1(m machine) string {

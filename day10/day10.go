@@ -6,6 +6,7 @@ import (
 	"image"
 	"maps"
 	"strings"
+	"time"
 )
 
 //go:embed input10.txt
@@ -25,10 +26,12 @@ type routeMap = map[string]bool
 var directions []point = []point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}}
 
 func main() {
+	start := time.Now()
 	tiles := parseInput(input)
 	solution1, solution2 := solvePuzzle(tiles)
-	fmt.Println("Day07 solution1:", solution1)
-	fmt.Println("Day07 solution2:", solution2)
+	fmt.Println("Day10 solution1:", solution1)
+	fmt.Println("Day10 solution2:", solution2)
+	fmt.Println("Day10 time:", time.Now().Sub(start))
 }
 
 func solvePuzzle(tiles [][]tile) (int, int) {
