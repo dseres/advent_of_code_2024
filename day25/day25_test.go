@@ -51,9 +51,3 @@ func TestSolution1(t *testing.T) {
 	result := solvePuzzle1(locks, keys)
 	a.Equal(3, result)
 }
-
-func TestSolution2(t *testing.T) {
-	result := solvePuzzle2(parseInput(testInput))
-	a := assert.New(t)
-	a.Equal(0, result)
-}

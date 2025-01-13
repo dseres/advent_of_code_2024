@@ -37,3 +37,12 @@ Solutions of Advent Of Code 2024 in Go
 | 23    | 1366                 | bs,cf,cn,gb,gk,jf,mp,qk,qo,st,ti,uc,xw | 10.30702ms |
 | 24    | 51107420031718       | cpm,ghp,gpr,krs,nks,z10,z21,z33 | 0.382251ms |
 | 25    | 2840                 |                      | 0.635332ms     |
+
+## Build instructions
+
+You can build test and run executables for all days with the following commands:
+```bash
+go build ./day*
+go test ./day*
+for i in (seq -w 1 25) ; go run ./day$i ; end
+```
