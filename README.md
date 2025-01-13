@@ -5,9 +5,9 @@
 ![stars](https://img.shields.io/badge/stars_%E2%AD%90-50-yellow)
 ![days_completed](https://img.shields.io/badge/days_completed-25-red)
 
-Solutions of Advent Of Code 2025 in Go
+Solutions of Advent Of Code 2024 in Go
 
-![2025](screenshot.png "2025")
+![2024](screenshot.png "2024")
 
 
 | Day   | Solution 1           | Solution 2           | Time          |
