@@ -42,7 +42,7 @@ Solutions of Advent Of Code 2024 in Go
 
 You can build test and run executables for all days with the following commands:
 ```bash
-go build ./day*
+go build -o ./bin/ ./day*
 go test ./day*
 for i in (seq -w 1 25) ; go run ./day$i ; end
 ```

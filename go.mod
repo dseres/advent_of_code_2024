@@ -1,6 +1,6 @@
-module github.com/dseres/advent_of_code_2024/day02
+module github.com/dseres/advent_of_code_2024
 
-go 1.23.3
+go 1.23.5
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
